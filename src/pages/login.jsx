@@ -15,7 +15,7 @@ function Login() {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/auth/login",
-        { email, password }
+        { email, password },
       );
       if (response.data.success) {
         login(response.data.user);
@@ -38,7 +38,7 @@ function Login() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-teal-600 to-gray-100 space-y-8 p-4">
       <h2 className="font-sans text-4xl font-extrabold text-white tracking-wide drop-shadow-lg">
-        MountainHub Employee System
+        Student Attendance System
       </h2>
       <div className="border shadow-lg p-8 w-96 bg-white rounded-2xl">
         <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">

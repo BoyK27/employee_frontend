@@ -22,7 +22,7 @@ const AdminSummary = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         setSummary(summary.data);
@@ -45,7 +45,7 @@ const AdminSummary = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         <SummaryCard
           icon={<FaUsers />}
-          text="Total Employees"
+          text="Number of students"
           number={summary.totalEmployees}
           color="bg-teal-600"
         />

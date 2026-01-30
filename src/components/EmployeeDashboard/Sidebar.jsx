@@ -5,6 +5,7 @@ import {
   FaCalendarAlt,
   FaCogs,
   FaMoneyBillWave,
+  FaRegCalendar,
   FaTachometerAlt,
   FaUsers,
 } from "react-icons/fa";

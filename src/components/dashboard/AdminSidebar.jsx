@@ -5,9 +5,12 @@ import {
   FaCalendarAlt,
   FaCogs,
   FaMoneyBillWave,
+  FaRegCalendar,
   FaTachometerAlt,
   FaUsers,
 } from "react-icons/fa";
+
+import { AiOutlineFileText } from "react-icons/ai";
 const AdminSidebar = () => {
   return (
     <div className="bg-gray-800 text-white h-screen fixed left-0 top-0 bottom-0 space-y-2 w-64">
@@ -37,7 +40,7 @@ const AdminSidebar = () => {
           }
         >
           <FaUsers />
-          <span>Employees</span>
+          <span>Student</span>
         </NavLink>
 
         <NavLink
@@ -73,15 +76,40 @@ const AdminSidebar = () => {
           <FaMoneyBillWave />
           <span>Salary</span>
         </NavLink>
-        {/*
+
         <NavLink
-          to="/admin-dashboard/settings"
-          className="flex items-center space-x-4 block py-2.5 px-4 rounded"
+          to="/admin-dashboard/attendance"
+          className={({ isActive }) =>
+            `${
+              isActive ? "bg-teal-500 " : " "
+            }flex items-center space-x-4 block py-2.5 px-4 rounded`
+          }
         >
-          <FaCogs />
-          <span>Setting</span>
+          <FaRegCalendar />
+          <span>Attendance</span>
         </NavLink>
-         */}
+
+        <NavLink
+          to="/admin-dashboard/attendance-report"
+          className={({ isActive }) =>
+            `${
+              isActive ? "bg-teal-500 " : " "
+            }flex items-center space-x-4 block py-2.5 px-4 rounded`
+          }
+        >
+          <AiOutlineFileText />
+          <span>Attendance Report</span>
+        </NavLink>
+
+        {
+          <NavLink
+            to="/admin-dashboard/settings"
+            className="flex items-center space-x-4 block py-2.5 px-4 rounded"
+          >
+            <FaCogs />
+            <span>Setting</span>
+          </NavLink>
+        }
       </div>
     </div>
   );
