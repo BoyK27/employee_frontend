@@ -16,7 +16,7 @@ const Details = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         if (response.data.success) {
           setLeave(response.data.leave);
@@ -28,7 +28,7 @@ const Details = () => {
       }
     };
     fetchLeave();
-  }, []);
+  }, [id]);
 
   const changeStatus = async (id, status) => {
     try {
@@ -39,7 +39,7 @@ const Details = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.data.success) {
         navigate("/admin-dashboard/leaves");
@@ -52,94 +52,105 @@ const Details = () => {
   };
 
   return (
-    <>
+    <div className="p-4 md:p-10">
       {leave ? (
-        <div className="max-w-3xl mx-auto mt-10 bg-white p-8 rounded-md shadow-md">
-          <h2 className="text-2xl font-bold mb-8 text-center">Leave Details</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
+        <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">
+            Leave Details
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            {/* Image Section */}
+            <div className="flex justify-center">
               <img
                 src={`http://localhost:5000/${leave.employeeId.userId.profileImage}`}
-                alt=""
-                className="rounded-full border w-72"
+                alt="Profile"
+                className="rounded-full border-4 border-teal-500 w-48 h-48 md:w-72 md:h-72 object-cover shadow-md"
               />
             </div>
-            <div>
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Nmae:</p>
-                <p className="font-medium">{leave.employeeId.userId.name}</p>
-              </div>
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Employee ID:</p>
-                <p className="font-medium">{leave.employeeId.employeeId}</p>
+
+            {/* Information Section */}
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
+                <p className="text-gray-500 font-bold w-32">Name:</p>
+                <p className="font-medium text-gray-900">
+                  {leave.employeeId.userId.name}
+                </p>
               </div>
 
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Leave Type:</p>
-                <p className="font-medium">{leave.leaveType}</p>
+              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
+                <p className="text-gray-500 font-bold w-32">Employee ID:</p>
+                <p className="font-medium text-gray-900">
+                  {leave.employeeId.employeeId}
+                </p>
               </div>
 
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Gender:</p>
-                <p className="font-medium">{leave.employeeId.gender}</p>
+              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
+                <p className="text-gray-500 font-bold w-32">Leave Type:</p>
+                <p className="font-medium text-gray-900">{leave.leaveType}</p>
               </div>
 
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Reason:</p>
-                <p className="font-medium">{leave.reason}</p>
-              </div>
-
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Department:</p>
-                <p className="font-medium">
+              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
+                <p className="text-gray-500 font-bold w-32">Department:</p>
+                <p className="font-medium text-gray-900">
                   {leave.employeeId.department.dep_name}
                 </p>
               </div>
 
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">Start Date:</p>
-                <p className="font-medium">
-                  {new Date(leave.startDate).toLocaleDateString()}
-                </p>
-              </div>
-
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">End Date:</p>
-                <p className="font-medium">
+              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
+                <p className="text-gray-500 font-bold w-32">Duration:</p>
+                <p className="font-medium text-gray-900">
+                  {new Date(leave.startDate).toLocaleDateString()} -{" "}
                   {new Date(leave.endDate).toLocaleDateString()}
                 </p>
               </div>
 
-              <div className="flex space-x-3 mb-2">
-                <p className="text-lg font-bold">
-                  {leave.status === "Pending" ? "Action" : "Status:"}
+              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
+                <p className="text-gray-500 font-bold w-32">Reason:</p>
+                <p className="font-medium text-gray-900">{leave.reason}</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row sm:space-x-3 pt-4">
+                <p className="text-gray-500 font-bold w-32 mb-2 sm:mb-0">
+                  {leave.status === "Pending" ? "Action:" : "Status:"}
                 </p>
                 {leave.status === "Pending" ? (
-                  <div className="flex space-x-2">
+                  <div className="flex space-x-3">
                     <button
                       onClick={() => changeStatus(leave._id, "Approved")}
-                      className="bg-green-500 text-white px-4 py-2 rounded"
+                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition-colors"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => changeStatus(leave._id, "Rejected")}
-                      className="bg-red-500 text-white px-4 py-2 rounded"
+                      className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition-colors"
                     >
                       Reject
                     </button>
                   </div>
                 ) : (
-                  <p className="font-medium">{leave.status}</p>
+                  <span
+                    className={`px-3 py-1 rounded-full text-sm font-bold ${
+                      leave.status === "Approved"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-red-100 text-red-700"
+                    }`}
+                  >
+                    {leave.status}
+                  </span>
                 )}
               </div>
             </div>
           </div>
         </div>
       ) : (
-        <div>Loading</div>
-      )}{" "}
-    </>
+        <div className="text-center mt-20">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading details...</p>
+        </div>
+      )}
+    </div>
   );
 };
 

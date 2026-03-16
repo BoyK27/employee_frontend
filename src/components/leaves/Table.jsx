@@ -45,7 +45,7 @@ const Table = () => {
       if (error.response && !error.response.data.success) {
         alert(error.response.data.error);
       } else {
-        alert("An unexpected error occurred. Please check the console.");
+        alert("An unexpected error occurred.");
       }
     }
   };
@@ -56,63 +56,104 @@ const Table = () => {
 
   const filterByInput = (e) => {
     const data = leaves.filter((leave) =>
-      leave.employeeId.toLowerCase().includes(e.target.value.toLowerCase())
+      leave.employeeId.toLowerCase().includes(e.target.value.toLowerCase()),
     );
     setFilteredLeaves(data);
   };
 
   const filterByButton = (status) => {
     const data = leaves.filter((leave) =>
-      leave.status.toLowerCase().includes(status.toLowerCase())
+      leave.status.toLowerCase().includes(status.toLowerCase()),
     );
     setFilteredLeaves(data);
   };
 
+  // Custom styles for the DataTable to make it more professional
+  const customStyles = {
+    headCells: {
+      style: {
+        backgroundColor: "#f3f4f6",
+        color: "#374151",
+        fontWeight: "bold",
+        fontSize: "14px",
+      },
+    },
+    rows: {
+      style: {
+        "&:hover": {
+          backgroundColor: "#f9fafb",
+        },
+      },
+    },
+  };
+
   return (
-    <>
+    <div className="p-4 md:p-6">
       {filteredLeaves ? (
-        <div className="p-6">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold">Manage Leaves</h3>
+        <div className="bg-white rounded-lg shadow-sm p-4">
+          <div className="text-center mb-6">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-800">
+              Manage Leaves
+            </h3>
           </div>
-          <div className="flex justify-between items-center my-4">
-            <input
-              type="text"
-              placeholder="Search By Emp ID"
-              className="px-4 py-2 border rounded-md"
-              onChange={filterByInput}
-            />
-            <div className="space-x-3">
+
+          <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:justify-between md:items-center mb-6">
+            {/* Search Input */}
+            <div className="w-full md:w-64">
+              <input
+                type="text"
+                placeholder="Search By Emp ID"
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 outline-none"
+                onChange={filterByInput}
+              />
+            </div>
+
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2 justify-center md:justify-end">
               <button
                 onClick={() => filterByButton("Pending")}
-                className="px-3 py-2 bg-teal-600 text-white hover:bg-teal-700 rounded-md"
+                className="px-4 py-2 bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 rounded-md transition-colors"
               >
                 Pending
               </button>
-
               <button
                 onClick={() => filterByButton("Rejected")}
-                className="px-3 py-2 bg-teal-600 text-white hover:bg-teal-700 rounded-md"
+                className="px-4 py-2 bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 rounded-md transition-colors"
               >
                 Rejected
               </button>
-
               <button
                 onClick={() => filterByButton("Approved")}
-                className="px-3 py-2 bg-teal-600 text-white hover:bg-teal-700 rounded-md"
+                className="px-4 py-2 bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 rounded-md transition-colors"
               >
                 Approved
               </button>
+              <button
+                onClick={() => setFilteredLeaves(leaves)}
+                className="px-4 py-2 bg-gray-500 text-white text-sm font-medium hover:bg-gray-600 rounded-md transition-colors"
+              >
+                All
+              </button>
             </div>
           </div>
-          <div className="mt-3">
-            <DataTable columns={columns} data={filteredLeaves} pagination />
+
+          <div className="overflow-x-auto">
+            <DataTable
+              columns={columns}
+              data={filteredLeaves}
+              pagination
+              customStyles={customStyles}
+              responsive
+              highlightOnHover
+            />
           </div>
         </div>
       ) : (
-        <div>Loading.......</div>
+        <div className="text-center py-20 text-gray-500 font-medium">
+          Loading.......
+        </div>
       )}
-    </>
+    </div>
   );
 };
 

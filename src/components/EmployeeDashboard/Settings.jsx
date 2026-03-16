@@ -33,7 +33,7 @@ const Settings = () => {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
 
         if (response.data.success) {
@@ -55,6 +55,7 @@ const Settings = () => {
 
       <form onSubmit={handleSubmit}>
         {/*Department Name*/}
+
         <div>
           <label className="text-sm font-medium text-gray-700">
             Old Password

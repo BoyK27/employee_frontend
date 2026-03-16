@@ -45,7 +45,7 @@ const AdminSummary = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
         <SummaryCard
           icon={<FaUsers />}
-          text="Number of students"
+          text="Number of Employees"
           number={summary.totalEmployees}
           color="bg-teal-600"
         />
@@ -59,7 +59,7 @@ const AdminSummary = () => {
         <SummaryCard
           icon={<FaBuilding />}
           text="Total Salaries"
-          number={summary.totalSalaries}
+          number={`${summary.totalSalaries} XAF`}
           color="bg-yellow-600"
         />
       </div>
