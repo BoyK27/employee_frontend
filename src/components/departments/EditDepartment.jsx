@@ -12,12 +12,12 @@ const EditDepartment = () => {
       setDepLoading(true);
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/department/${id}`,
+          `https://ems-backend-hazel.vercel.app/api/department/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         if (response.data.success) {
           setDepartment(response.data.department);
@@ -42,13 +42,13 @@ const EditDepartment = () => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/department/${id}`,
+        `https://ems-backend-hazel.vercel.app/api/department/${id}`,
         department,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.data.success) {
         navigate("/admin-dashboard/departments");

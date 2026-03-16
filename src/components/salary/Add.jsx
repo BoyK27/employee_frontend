@@ -40,13 +40,13 @@ const Add = () => {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/salary/add`,
+        `https://ems-backend-hazel.vercel.app/api/salary/add`,
         salary,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.data.success) {
         navigate("/admin-dashboard/employees");

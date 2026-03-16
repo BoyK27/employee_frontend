@@ -12,12 +12,12 @@ function authContext({ children }) {
         const token = localStorage.getItem("token");
         if (token) {
           const response = await axios.get(
-            "http://localhost:5000/api/auth/verify",
+            "https://ems-backend-hazel.vercel.app/api/auth/verify",
             {
               headers: {
                 Authorization: `Bearer ${token}`,
               },
-            }
+            },
           );
           if (response.data.success) {
             setUser(response.data.user);

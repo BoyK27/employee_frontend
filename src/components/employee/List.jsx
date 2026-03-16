@@ -12,11 +12,14 @@ const List = () => {
     const fetchEmployees = async () => {
       setEmpLoading(true);
       try {
-        const response = await axios.get("http://localhost:5000/api/employee", {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+        const response = await axios.get(
+          "https://ems-backend-hazel.vercel.app/api/employee",
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
           },
-        });
+        );
         if (response.data.success) {
           let sno = 1;
           const data = await response.data.employees.map((emp) => ({
@@ -50,7 +53,7 @@ const List = () => {
 
   const handleFilter = (e) => {
     const records = employees.filter((emp) =>
-      emp.name.toLowerCase().includes(e.target.value.toLowerCase())
+      emp.name.toLowerCase().includes(e.target.value.toLowerCase()),
     );
     setFilteredEmployee(records);
   };

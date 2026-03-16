@@ -36,13 +36,13 @@ const Add = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/employee/add",
+        "https://ems-backend-hazel.vercel.app/api/employee/add",
         formDataObj,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.data.success) {
         navigate("/admin-dashboard/employees");

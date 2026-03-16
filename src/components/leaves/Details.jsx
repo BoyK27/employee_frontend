@@ -33,7 +33,7 @@ const Details = () => {
   const changeStatus = async (id, status) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/leave/${id}`,
+        `https://ems-backend-hazel.vercel.app/api/leave/${id}`,
         { status },
         {
           headers: {

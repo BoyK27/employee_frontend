@@ -20,13 +20,13 @@ const Add = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/leave/add",
+        "https://ems-backend-hazel.vercel.app/api/leave/add",
         leave,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       console.log(response.data);
       if (response.data.success) {

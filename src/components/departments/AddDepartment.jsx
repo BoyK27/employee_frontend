@@ -17,13 +17,13 @@ const AddDepartment = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/department/add",
+        "https://ems-backend-hazel.vercel.app/api/department/add",
         department,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.data.success) {
         navigate("/admin-dashboard/departments");

@@ -28,12 +28,12 @@ const Edit = () => {
     const fetchEmployee = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/employee/${id}`,
+          `https://ems-backend-hazel.vercel.app/api/employee/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
             },
-          }
+          },
         );
         if (response.data.success) {
           const employee = response.data.employee;
@@ -72,7 +72,7 @@ const Edit = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        }
+        },
       );
       if (response.data.success) {
         navigate("/admin-dashboard/employees");

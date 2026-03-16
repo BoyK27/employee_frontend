@@ -16,7 +16,7 @@ const AttendanceReport = () => {
         query.append("date", dateFilter);
       }
       const response = await axios.get(
-        `http://localhost:5000/api/attendance/report?${query.toString()}`,
+        `https://ems-backend-hazel.vercel.app/api/attendance/report?${query.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

@@ -37,13 +37,13 @@ export const columns = [
 const AttendanceHelper = ({ status, employeeId, statusChange }) => {
   const markEmployee = async (status, employeeId) => {
     const response = await axios.put(
-      `http://localhost:5000/api/attendance/update/${employeeId}`,
+      `https://ems-backend-hazel.vercel.app/api/attendance/update/${employeeId}`,
       { status },
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      }
+      },
     );
     if (response.data.success) {
       statusChange();
