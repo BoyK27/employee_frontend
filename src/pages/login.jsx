@@ -42,7 +42,7 @@ function Login() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-teal-600 to-blue-900 p-4 md:p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-6">
       {/* Branding - Responsive Font Sizes */}
       <div className="mb-8 text-center animate-fade-in">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-xl">
