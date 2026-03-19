@@ -34,7 +34,7 @@ const List = () => {
                 width={35}
                 height={35}
                 className="rounded-full object-cover border"
-                src={`http://localhost:5000/${emp.userId.profileImage}`}
+                src={emp.userId.profileImage}
                 alt={emp.userId.name}
               />
             ),
