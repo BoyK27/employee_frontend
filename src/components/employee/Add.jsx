@@ -2,11 +2,14 @@ import { fetchDepartments } from "../../utils/EmployeeHelper";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+// Optional: If you use Lucide icons
+import { Eye, EyeOff } from "lucide-react";
 
 const Add = () => {
   const [departments, setDepartments] = useState([]);
   const [formData, setFormData] = useState({});
-  const [loading, setLoading] = useState(false); // Added loading state
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false); // State for eye icon
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,7 +31,7 @@ const Add = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Disable button
+    setLoading(true);
 
     const formDataObj = new FormData();
     Object.keys(formData).forEach((key) => {
@@ -42,7 +45,6 @@ const Add = () => {
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
-            // Browser automatically sets multipart/form-data for FormData objects
           },
         },
       );
@@ -66,8 +68,6 @@ const Add = () => {
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-5">
-          {/* Use a helper component or write out the inputs */}
-
           <FormInput
             label="Full Name"
             name="name"
@@ -100,7 +100,6 @@ const Add = () => {
             required
           />
 
-          {/* Gender */}
           <FormSelect
             label="Gender"
             name="gender"
@@ -112,7 +111,6 @@ const Add = () => {
             <option value="female">Female</option>
           </FormSelect>
 
-          {/* Marital Status */}
           <FormSelect
             label="Marital Status"
             name="maritalStatus"
@@ -133,7 +131,6 @@ const Add = () => {
             required
           />
 
-          {/* Department */}
           <FormSelect
             label="Department"
             name="department"
@@ -156,23 +153,32 @@ const Add = () => {
             placeholder="0.00"
             required
           />
-          <FormInput
-            label="Password"
-            name="password"
-            type="password"
-            onChange={handleChange}
-            placeholder="*******"
-            required
-          />
 
-          {/* Role */}
+          {/* PASSWORD FIELD WITH EYE ICON */}
+          <div className="relative">
+            <FormInput
+              label="Password"
+              name="password"
+              type={showPassword ? "text" : "password"} // Dynamic type
+              onChange={handleChange}
+              placeholder="*******"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-[38px] text-gray-500 hover:text-teal-600 transition-colors"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
           <FormSelect label="Role" name="role" onChange={handleChange} required>
             <option value="">Select Role</option>
             <option value="admin">Admin</option>
             <option value="employee">Employee</option>
           </FormSelect>
 
-          {/* Upload Image */}
           <div>
             <label className="block text-sm font-semibold text-gray-600 mb-1">
               Upload Profile Image
@@ -204,9 +210,9 @@ const Add = () => {
   );
 };
 
-// Reusable components for cleaner code
+// Reusable components
 const FormInput = ({ label, ...props }) => (
-  <div>
+  <div className="w-full">
     <label className="block text-sm font-semibold text-gray-600 mb-1 ml-1">
       {label}
     </label>

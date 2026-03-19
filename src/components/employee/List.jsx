@@ -8,6 +8,14 @@ const List = () => {
   const [employees, setEmployees] = useState([]);
   const [empLoading, setEmpLoading] = useState(false);
   const [filteredEmployee, setFilteredEmployee] = useState([]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  // Handle window resizing to switch views
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchEmployees = async () => {
@@ -26,9 +34,10 @@ const List = () => {
           const data = response.data.employees.map((emp) => ({
             _id: emp._id,
             sno: sno++,
-            dep_name: emp.department.dep_name,
+            dep_name: emp.department?.dep_name || "N/A",
             name: emp.userId.name,
             dob: new Date(emp.dob).toLocaleDateString(),
+            profileImageUrl: emp.userId.profileImage, // keep raw URL for card view
             profileImage: (
               <img
                 width={35}
@@ -71,14 +80,12 @@ const List = () => {
 
   return (
     <div className="p-4 md:p-6">
-      {/* Title */}
       <div className="text-center mb-6">
         <h3 className="text-xl md:text-2xl font-bold text-gray-800">
           Manage Students / Employees
         </h3>
       </div>
 
-      {/* Search and Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <input
           type="text"
@@ -94,22 +101,45 @@ const List = () => {
         </Link>
       </div>
 
-      {/* Table Container */}
-      <div className="bg-white rounded-lg shadow">
-        <DataTable
-          columns={columns}
-          data={filteredEmployee}
-          pagination
-          responsive
-          highlightOnHover
-          customStyles={customTableStyles}
-        />
-      </div>
+      {/* MOBILE VIEW: Grid Boxes */}
+      {isMobile ? (
+        <div className="grid grid-cols-1 gap-4">
+          {filteredEmployee.map((emp) => (
+            <div
+              key={emp._id}
+              className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4"
+            >
+              <img
+                src={emp.profileImageUrl}
+                alt={emp.name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-teal-500"
+              />
+              <div className="flex-1">
+                <h4 className="font-bold text-gray-900">{emp.name}</h4>
+                <p className="text-sm text-gray-500">{emp.dep_name}</p>
+                <p className="text-xs text-gray-400">DOB: {emp.dob}</p>
+                <div className="mt-2 scale-90 origin-left">{emp.action}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        /* DESKTOP VIEW: DataTable */
+        <div className="bg-white rounded-lg shadow">
+          <DataTable
+            columns={columns}
+            data={filteredEmployee}
+            pagination
+            responsive
+            highlightOnHover
+            customStyles={customTableStyles}
+          />
+        </div>
+      )}
     </div>
   );
 };
 
-// Professional Table Styling
 const customTableStyles = {
   headCells: {
     style: {
