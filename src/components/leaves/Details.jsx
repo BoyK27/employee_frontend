@@ -63,7 +63,7 @@ const Details = () => {
             {/* Image Section */}
             <div className="flex justify-center">
               <img
-                src={`http://localhost:5000/${leave.employeeId.userId.profileImage}`}
+                src={leave.employeeId.userId.profileImage}
                 alt="Profile"
                 className="rounded-full border-4 border-teal-500 w-48 h-48 md:w-72 md:h-72 object-cover shadow-md"
               />
