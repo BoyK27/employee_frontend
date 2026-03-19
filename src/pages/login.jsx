@@ -49,7 +49,7 @@ function Login() {
           M-HUB ORCHARD
         </h2>
         <p className="text-teal-200 mt-2 font-medium tracking-widest text-xs sm:text-sm uppercase">
-          Management System
+          Our All in One Control Center
         </p>
       </div>
 
@@ -80,7 +80,7 @@ function Login() {
               onChange={(e) => setEmail(e.target.value)}
               type="email"
               required
-              placeholder="name@company.com"
+              placeholder="example@gmail.com"
               className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all text-base"
             />
           </div>
