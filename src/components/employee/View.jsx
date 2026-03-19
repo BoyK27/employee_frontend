@@ -38,10 +38,14 @@ const View = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <img
+              <img /*
                 src={`http://localhost:5000/${employee.userId.profileImage}`}
                 alt=""
                 className="rounded-full border w-72"
+                */
+                src={employee.userId.profileImage}
+                alt={employee.userId.name}
+                className="rounded-full border w-72 h-72 object-cover shadow-sm"
               />
             </div>
             <div>
