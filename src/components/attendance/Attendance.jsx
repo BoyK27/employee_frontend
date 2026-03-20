@@ -23,7 +23,12 @@ const Attendance = () => {
           },
         },
       );
+      console.log("RAW DATA FROM SERVER:", response.data); // <-- CHECK THIS 1
       if (response.data.success) {
+        console.log(
+          "ATTENDANCE ARRAY LENGTH:",
+          response.data.attendance.length,
+        ); // <-- CHECK THIS 2
         let sno = 1;
         const data = await response.data.attendance.map((att) => ({
           employeeId: att.employeeId.employeeId,
@@ -45,6 +50,7 @@ const Attendance = () => {
     } catch (error) {
       if (error.response && !error.response.data.success) {
         alert(error.response.data.error);
+        console.error("AXIOS FETCH ERROR:", error.response || error);
       }
     } finally {
       setLoading(false);
