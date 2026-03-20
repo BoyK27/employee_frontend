@@ -46,7 +46,7 @@ function Login() {
       {/* Branding - Responsive Font Sizes */}
       <div className="mb-8 text-center animate-fade-in">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-xl">
-          M-HUB ORCHARD
+          M-HUB ORCHARD BY PATRICK GLAINE
         </h2>
         <p className="text-teal-200 mt-2 font-medium tracking-widest text-xs sm:text-sm uppercase">
           Our All in One Control Center
