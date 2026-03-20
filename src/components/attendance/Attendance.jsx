@@ -54,28 +54,21 @@ const Attendance = () => {
       if (response.data.success) {
         let sno = 1;
         const data = response.data.attendance
-          .filter((att) => att.employeeId !== null) // 1. EXCLUDE orphaned records
-          .map((att) => {
-            // 2. Add a fallback just in case
-            const emp = att.employeeId || {};
-            const user = emp.userId || {};
-            const dept = emp.department || {};
-
-            return {
-              _id: att._id,
-              sno: sno++,
-              employeeId: emp.employeeId || "N/A",
-              name: user.name || "Deleted User",
-              department: dept.dep_name || "N/A",
-              action: (
-                <AttendanceHelper
-                  status={att.status}
-                  employeeId={emp._id} // Sending the MongoDB _id
-                  statusChange={statusChange}
-                />
-              ),
-            };
-          });
+          .filter((att) => att.employeeId) // Only map if employeeId exists
+          .map((att) => ({
+            _id: att._id,
+            sno: sno++,
+            employeeId: att.employeeId.employeeId,
+            name: att.employeeId.userId?.name || "N/A",
+            department: att.employeeId.department?.dep_name || "N/A",
+            action: (
+              <AttendanceHelper
+                status={att.status}
+                employeeId={att.employeeId._id}
+                statusChange={statusChange}
+              />
+            ),
+          }));
 
         setAttendance(data);
         setFilteredAttendance(data);
