@@ -54,22 +54,28 @@ const Attendance = () => {
       if (response.data.success) {
         let sno = 1;
         const data = response.data.attendance
-          .filter((att) => att.employeeId) // Double safety: ignore nulls
-          .map((att) => ({
-            _id: att._id,
-            sno: sno++,
-            // Access the nested data safely
-            employeeId: att.employeeId.employeeId,
-            name: att.employeeId.userId?.name || "Unknown",
-            department: att.employeeId.department?.dep_name || "N/A",
-            action: (
-              <AttendanceHelper
-                status={att.status}
-                employeeId={att.employeeId._id} // MongoDB Object ID
-                statusChange={statusChange}
-              />
-            ),
-          }));
+          .filter((att) => att.employeeId !== null) // 1. EXCLUDE orphaned records
+          .map((att) => {
+            // 2. Add a fallback just in case
+            const emp = att.employeeId || {};
+            const user = emp.userId || {};
+            const dept = emp.department || {};
+
+            return {
+              _id: att._id,
+              sno: sno++,
+              employeeId: emp.employeeId || "N/A",
+              name: user.name || "Deleted User",
+              department: dept.dep_name || "N/A",
+              action: (
+                <AttendanceHelper
+                  status={att.status}
+                  employeeId={emp._id} // Sending the MongoDB _id
+                  statusChange={statusChange}
+                />
+              ),
+            };
+          });
 
         setAttendance(data);
         setFilteredAttendance(data);
