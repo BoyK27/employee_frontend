@@ -24,6 +24,7 @@ const Attendance = () => {
         },
       );
       console.log("RAW DATA FROM SERVER:", response.data); // <-- CHECK THIS 1
+      /*
       if (response.data.success) {
         console.log(
           "ATTENDANCE ARRAY LENGTH:",
@@ -44,6 +45,32 @@ const Attendance = () => {
             />
           ),
         }));
+        setAttendance(data);
+        setFilteredAttendance(data);
+      }
+
+      */
+
+      if (response.data.success) {
+        let sno = 1;
+        const data = response.data.attendance
+          .filter((att) => att.employeeId) // Double safety: ignore nulls
+          .map((att) => ({
+            _id: att._id,
+            sno: sno++,
+            // Access the nested data safely
+            employeeId: att.employeeId.employeeId,
+            name: att.employeeId.userId?.name || "Unknown",
+            department: att.employeeId.department?.dep_name || "N/A",
+            action: (
+              <AttendanceHelper
+                status={att.status}
+                employeeId={att.employeeId._id} // MongoDB Object ID
+                statusChange={statusChange}
+              />
+            ),
+          }));
+
         setAttendance(data);
         setFilteredAttendance(data);
       }
