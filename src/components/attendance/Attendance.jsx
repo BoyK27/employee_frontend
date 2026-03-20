@@ -67,42 +67,30 @@ const Attendance = () => {
       if (response.data.success) {
         let sno = 1;
 
-        // --- CRITICAL FIX: Safe Mapping ---
-        const data = response.data.attendance.map((att) => {
-          // Defensive check: If employeeId is missing, return a fallback object
-          if (!att.employeeId) {
-            return {
-              sno: sno++,
-              employeeId: "N/A",
-              name: "Deleted Employee",
-              department: "N/A",
-              action: null,
-            };
-          }
-
-          return {
+        // --- PLACE THE NEW BLOCK HERE ---
+        const data = response.data.attendance
+          .filter((att) => att.employeeId) // Removes records of deleted employees
+          .map((att) => ({
             _id: att._id,
             sno: sno++,
-            // Use Optional Chaining (?.) to prevent "Cannot read properties of undefined"
-            employeeId: att.employeeId.employeeId || "N/A",
+            employeeId: att.employeeId.employeeId, // The string (e.g., EMP101)
             name: att.employeeId.userId?.name || "Unknown",
             department: att.employeeId.department?.dep_name || "N/A",
-            status: att.status || "Not Marked",
             action: (
               <AttendanceHelper
                 status={att.status}
-                employeeId={att.employeeId._id} // Use the MongoDB _id for actions
+                // This sends the MongoDB _id to the Update API
+                employeeId={att.employeeId._id}
                 statusChange={statusChange}
               />
             ),
-          };
-        });
+          }));
+        // ---------------------------------
 
         setAttendance(data);
         setFilteredAttendance(data);
       }
     } catch (error) {
-      console.error("Attendance Fetch Error:", error);
       if (error.response && !error.response.data.success) {
         alert(error.response.data.error);
       }
