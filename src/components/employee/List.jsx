@@ -38,7 +38,7 @@ const List = () => {
                 alt={emp.userId.name}
               />
             ),
-            // We keep the original raw data for the Mobile Cards
+            // rawImage preserved for mobile card styling
             rawImage: emp.userId.profileImage,
             action: <EmployeeButtons DepId={emp._id} />,
           }));
@@ -73,10 +73,14 @@ const List = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      {/* Title */}
       <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold text-gray-800">Manage Employees</h3>
+        <h3 className="text-2xl font-bold text-gray-800">
+          Manage Students / Employees
+        </h3>
       </div>
 
+      {/* Search and Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <input
           type="text"
@@ -103,28 +107,30 @@ const List = () => {
               <img
                 src={emp.rawImage}
                 className="w-14 h-14 rounded-full border-2 border-teal-500 p-0.5 object-cover"
-                alt=""
+                alt={emp.name}
               />
-              <div>
-                <h4 className="font-bold text-gray-800 text-lg">{emp.name}</h4>
-                <p className="text-gray-500 text-sm">{emp.dep_name}</p>
-              </div>
-              <div className="ml-auto text-xs font-bold text-gray-400">
-                #{emp.sno}
+              <div className="flex-1">
+                <div className="flex justify-between items-start">
+                  <h4 className="font-bold text-gray-800 text-lg leading-tight">
+                    {emp.name}
+                  </h4>
+                  <span className="text-xs font-bold text-gray-300">
+                    #{emp.sno}
+                  </span>
+                </div>
+                <p className="text-gray-500 text-sm mt-0.5">{emp.dep_name}</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between border-t pt-4">
-              <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
-                Actions
-              </div>
-              <div className="scale-90 origin-right">{emp.action}</div>
+            {/* Action Buttons Section - No text label for maximum space */}
+            <div className="border-t pt-4 flex justify-around">
+              {emp.action}
             </div>
           </div>
         ))}
         {filteredEmployee.length === 0 && (
-          <div className="text-center py-10 text-gray-400">
-            No employees found.
+          <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
+            <p className="text-gray-400">No employees found.</p>
           </div>
         )}
       </div>
@@ -143,6 +149,7 @@ const List = () => {
   );
 };
 
+// Professional Table Styling for Desktop
 const customTableStyles = {
   headCells: {
     style: {
