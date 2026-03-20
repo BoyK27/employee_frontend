@@ -9,7 +9,7 @@ const Edit = () => {
     maritalStatus: "",
     designation: "",
     salary: 0,
-    departments: "",
+    departments: "", // Preserved typo
   });
   const [departments, setDepartments] = React.useState(null);
 
@@ -87,17 +87,24 @@ const Edit = () => {
   };
 
   return (
-    <>
+    <div className="min-h-screen bg-gray-100 flex items-start justify-center p-0 md:p-4">
       {departments && employee ? (
-        <div className="max-w-4xl mx-auto mt-10 bg-white p-5 rounded-md shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-center">
-            Edit Employee Details
-          </h2>
-          <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="w-full max-w-2xl bg-white shadow-none md:shadow-lg md:rounded-lg overflow-hidden">
+          {/* Mobile-Friendly Header */}
+          <div className="bg-teal-600 p-6 text-white text-center md:text-left">
+            <h2 className="text-xl md:text-2xl font-bold">
+              Edit Employee Details
+            </h2>
+            <p className="text-teal-100 text-sm">
+              Update the information below
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/*Name*/}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Name
                 </label>
                 <input
@@ -106,22 +113,21 @@ const Edit = () => {
                   value={employee.name}
                   onChange={handleChange}
                   placeholder="Insert Name"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   required
                 />
               </div>
 
               {/*Marital Status*/}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Marital Status
                 </label>
                 <select
                   name="maritalStatus"
                   onChange={handleChange}
                   value={employee.maritalStatus}
-                  placeholder="Marital Status"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   required
                 >
                   <option value="">Select Status</option>
@@ -131,8 +137,8 @@ const Edit = () => {
               </div>
 
               {/*Designation*/}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Designation
                 </label>
                 <input
@@ -141,14 +147,14 @@ const Edit = () => {
                   onChange={handleChange}
                   value={employee.designation}
                   placeholder="Designation"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   required
                 />
               </div>
 
               {/*Salary*/}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="flex flex-col">
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Salary
                 </label>
                 <input
@@ -157,21 +163,21 @@ const Edit = () => {
                   onChange={handleChange}
                   value={employee.salary}
                   placeholder="salary"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   required
                 />
               </div>
 
               {/*Department*/}
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700">
+              <div className="col-span-1 md:col-span-2 flex flex-col">
+                <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Department
                 </label>
                 <select
                   name="department"
                   onChange={handleChange}
                   value={employee.department}
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   required
                 >
                   <option value="">Select Department</option>
@@ -184,18 +190,24 @@ const Edit = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md"
-            >
-              Confirm Edited Employee
-            </button>
+            {/* Submit Button - Full width on mobile */}
+            <div className="pt-4">
+              <button
+                type="submit"
+                className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-4 px-4 rounded-xl shadow-md transition-transform active:scale-95"
+              >
+                Confirm Edited Employee
+              </button>
+            </div>
           </form>
         </div>
       ) : (
-        <div>Loading....</div>
+        <div className="mt-20 flex flex-col items-center">
+          <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="mt-4 text-gray-600 font-medium">Loading details...</p>
+        </div>
       )}
-    </>
+    </div>
   );
 };
 
