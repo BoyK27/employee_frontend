@@ -30,16 +30,16 @@ const List = () => {
             name: emp.userId.name,
             dob: new Date(emp.dob).toLocaleDateString(),
             profileImage: (
-              <div className="flex items-center justify-center py-1">
-                <img
-                  width={40}
-                  height={40}
-                  className="rounded-full object-cover border-2 border-teal-100 shadow-sm"
-                  src={emp.userId.profileImage}
-                  alt={emp.userId.name}
-                />
-              </div>
+              <img
+                width={35}
+                height={35}
+                className="rounded-full object-cover border"
+                src={emp.userId.profileImage}
+                alt={emp.userId.name}
+              />
             ),
+            // We keep the original raw data for the Mobile Cards
+            rawImage: emp.userId.profileImage,
             action: <EmployeeButtons DepId={emp._id} />,
           }));
           setEmployees(data);
@@ -65,129 +65,99 @@ const List = () => {
 
   if (empLoading) {
     return (
-      <div className="flex flex-col justify-center items-center h-[70vh] space-y-4">
-        <div className="animate-spin rounded-full h-14 w-14 border-t-4 border-b-4 border-teal-600"></div>
-        <p className="text-gray-500 font-medium animate-pulse">
-          Fetching records...
-        </p>
+      <div className="flex justify-center items-center h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-0 md:p-6">
-      {/* Header Card */}
-      <div className="bg-white border-b md:border md:rounded-xl shadow-sm overflow-hidden mb-6">
-        <div className="p-6 md:p-8 flex flex-col items-center text-center">
-          <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Employee Directory
-          </h3>
-          <p className="text-gray-500 mt-1 text-sm md:text-base">
-            Manage and view all registered staff members
-          </p>
-        </div>
-
-        {/* Action Bar inside the card for a cohesive look */}
-        <div className="px-6 pb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="relative w-full md:w-80">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </span>
-            <input
-              type="text"
-              placeholder="Search by Name..."
-              className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all shadow-sm"
-              onChange={handleFilter}
-            />
-          </div>
-
-          <Link
-            to="/admin-dashboard/add-employee"
-            className="w-full md:w-auto flex items-center justify-center px-8 py-3 bg-teal-600 hover:bg-teal-700 rounded-xl text-white font-bold transition-all shadow-lg shadow-teal-100 active:scale-95"
-          >
-            <span className="mr-2 text-xl">+</span> Add New Employee
-          </Link>
-        </div>
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+      <div className="text-center mb-6">
+        <h3 className="text-2xl font-bold text-gray-800">Manage Employees</h3>
       </div>
 
-      {/* Table Container */}
-      <div className="bg-white shadow-none md:shadow-lg md:rounded-xl overflow-hidden border-t md:border">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Search by Name..."
+          className="w-full md:w-72 px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+          onChange={handleFilter}
+        />
+        <Link
+          to="/admin-dashboard/add-employee"
+          className="w-full md:w-auto text-center px-6 py-3 bg-teal-600 hover:bg-teal-700 rounded-xl text-white font-bold transition-all shadow-md active:scale-95"
+        >
+          + Add New
+        </Link>
+      </div>
+
+      {/* --- MOBILE VIEW (Cards) --- */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {filteredEmployee.map((emp) => (
+          <div
+            key={emp._id}
+            className="bg-white p-5 rounded-xl shadow-sm border border-gray-100"
+          >
+            <div className="flex items-center gap-4 mb-4">
+              <img
+                src={emp.rawImage}
+                className="w-14 h-14 rounded-full border-2 border-teal-500 p-0.5 object-cover"
+                alt=""
+              />
+              <div>
+                <h4 className="font-bold text-gray-800 text-lg">{emp.name}</h4>
+                <p className="text-gray-500 text-sm">{emp.dep_name}</p>
+              </div>
+              <div className="ml-auto text-xs font-bold text-gray-400">
+                #{emp.sno}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t pt-4">
+              <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                Actions
+              </div>
+              <div className="scale-90 origin-right">{emp.action}</div>
+            </div>
+          </div>
+        ))}
+        {filteredEmployee.length === 0 && (
+          <div className="text-center py-10 text-gray-400">
+            No employees found.
+          </div>
+        )}
+      </div>
+
+      {/* --- DESKTOP VIEW (Table) --- */}
+      <div className="hidden md:block bg-white rounded-xl shadow-lg overflow-hidden border">
         <DataTable
           columns={columns}
           data={filteredEmployee}
           pagination
-          responsive
           highlightOnHover
           customStyles={customTableStyles}
-          paginationRowsPerPageOptions={[5, 10, 15, 20]}
         />
       </div>
     </div>
   );
 };
 
-// UI-First Table Styling
 const customTableStyles = {
-  header: {
-    style: {
-      display: "none", // We use our own header
-    },
-  },
-  headRow: {
-    style: {
-      backgroundColor: "#f8fafc",
-      borderTopWidth: "1px",
-      borderColor: "#e2e8f0",
-    },
-  },
   headCells: {
     style: {
-      color: "#64748b",
-      fontSize: "0.75rem",
+      backgroundColor: "#f9fafb",
+      color: "#374151",
+      fontSize: "14px",
       fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: "0.05em",
-      paddingLeft: "24px",
-      paddingRight: "24px",
+      padding: "20px",
     },
   },
   rows: {
     style: {
       fontSize: "14px",
-      color: "#1e293b",
-      fontWeight: "500",
-      minHeight: "72px", // Larger rows for better touch interaction
-      "&:not(:last-child)": {
-        borderBottomStyle: "solid",
-        borderBottomWidth: "1px",
-        borderBottomColor: "#f1f5f9",
-      },
-    },
-  },
-  cells: {
-    style: {
-      paddingLeft: "24px",
-      paddingRight: "24px",
-    },
-  },
-  pagination: {
-    style: {
-      borderTopWidth: "1px",
-      borderColor: "#f1f5f9",
-      color: "#64748b",
-      fontWeight: "600",
+      color: "#4b5563",
+      padding: "10px",
     },
   },
 };
