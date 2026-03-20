@@ -11,12 +11,6 @@ const List = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
-      const token = localStorage.getItem("token");
-      console.log("Current Token:", token); // CHECK THIS ON DESKTOP
-      if (!token) {
-        alert("No token found! Please login again.");
-        return;
-      }
       setEmpLoading(true);
       try {
         const response = await axios.get(
@@ -81,9 +75,7 @@ const List = () => {
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {/* Title */}
       <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold text-gray-800">
-          Manage Students / Employees
-        </h3>
+        <h3 className="text-2xl font-bold text-gray-800">Manage Employees</h3>
       </div>
 
       {/* Search and Action Bar */}
