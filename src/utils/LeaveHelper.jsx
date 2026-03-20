@@ -1,4 +1,5 @@
 // src/utils/LeaveHelper.js
+
 import { useNavigate } from "react-router-dom";
 
 export const columns = [
@@ -9,17 +10,13 @@ export const columns = [
   },
   {
     name: "Emp ID",
-    // Matches 'employeeId' from our transformedData map
     selector: (row) => row.employeeId,
     width: "120px",
-    sortable: true,
   },
   {
     name: "Name",
-    // Matches 'name' from our transformedData map
     selector: (row) => row.name,
-    width: "150px",
-    sortable: true,
+    width: "120px",
   },
   {
     name: "Leave Type",
@@ -28,7 +25,6 @@ export const columns = [
   },
   {
     name: "Department",
-    // Matches 'department' from our transformedData map
     selector: (row) => row.department,
     width: "140px",
   },
@@ -41,7 +37,6 @@ export const columns = [
     name: "Status",
     selector: (row) => row.status,
     width: "120px",
-    // Optional: Add custom styling for the status directly in the column
   },
   {
     name: "Action",
@@ -50,17 +45,19 @@ export const columns = [
   },
 ];
 
+// This is the corrected, final version of the button component.
 export const LeaveButtons = ({ Id }) => {
   const navigate = useNavigate();
 
   const handleView = () => {
+    // Use the 'Id' prop that is passed to the component.
     navigate(`/admin-dashboard/leaves/${Id}`);
   };
 
   return (
     <button
       onClick={handleView}
-      className="px-4 py-1.5 bg-teal-600 text-white rounded-lg text-xs font-bold hover:bg-teal-700 transition-all shadow-sm"
+      className="px-4 py-1 bg-teal-500 rounded text-white hover:bg-teal-600"
     >
       View
     </button>
