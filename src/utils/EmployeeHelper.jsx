@@ -63,7 +63,7 @@ export const getEmployees = async (id) => {
   let employees;
   try {
     const response = await axios.get(
-      `https://ems-backend-hazel.vercel.app/api/employee/department/salary/${id}`,
+      `https://ems-backend-hazel.vercel.app/api/employee/salary/${id}`,
       {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
