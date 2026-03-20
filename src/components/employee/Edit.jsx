@@ -66,7 +66,7 @@ const Edit = () => {
 
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/employee/${id}`,
+        `https://ems-backend-hazel.vercel.app/api/employee/${id}`,
         employee,
         {
           headers: {
