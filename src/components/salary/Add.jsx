@@ -1,15 +1,15 @@
 import { fetchDepartments, getEmployees } from "../../utils/EmployeeHelper";
 import React from "react";
 import axios from "axios";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 const Add = () => {
   const [salary, setSalary] = React.useState({
-    employeeId: null,
+    employeeId: "", // Use empty string instead of null for select inputs
     basicSalary: 0,
     allowances: 0,
     deductions: 0,
-    payDate: null,
+    payDate: "",
   });
   const [departments, setDepartments] = React.useState(null);
   const [employees, setEmployees] = React.useState([]);
@@ -17,27 +17,37 @@ const Add = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    const getDepartments = async () => {
-      const departments = await fetchDepartments();
-      setDepartments(departments);
+    const getDepartmentsData = async () => {
+      const deps = await fetchDepartments();
+      setDepartments(deps);
     };
-    getDepartments();
+    getDepartmentsData();
   }, []);
 
   const handleDepartment = async (e) => {
-    const emps = await getEmployees(e.target.value);
-    setEmployees(emps);
+    const depId = e.target.value;
+    if (depId) {
+      const emps = await getEmployees(depId);
+      setEmployees(emps);
+    } else {
+      setEmployees([]);
+    }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    setSalary((preData) => ({ ...preData, [name]: value }));
+    // Ensure numeric fields are stored as numbers, not strings
+    setSalary((preData) => ({
+      ...preData,
+      [name]:
+        name === "basicSalary" || name === "allowances" || name === "deductions"
+          ? Number(value)
+          : value,
+    }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const response = await axios.post(
         "https://ems-backend-hazel.vercel.app/api/salary/add",
@@ -63,19 +73,21 @@ const Add = () => {
   return (
     <>
       {departments ? (
-        <div className="max-w-4xl mx-auto mt-10 bg-white p-5 rounded-md shadow-md">
-          <h2 className="text-2xl font-bold mb-6 text-center">Add Salary</h2>
+        <div className="max-w-4xl mx-auto mt-10 bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+          <h2 className="text-2xl font-extrabold mb-8 text-center text-gray-800">
+            Add Employee Salary
+          </h2>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/*Department*/}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Department */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-600 mb-1">
                   Department
                 </label>
                 <select
                   name="department"
                   onChange={handleDepartment}
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                   required
                 >
                   <option value="">Select Department</option>
@@ -87,81 +99,81 @@ const Add = () => {
                 </select>
               </div>
 
-              {/*Employee*/}
+              {/* Employee */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-600 mb-1">
                   Employee
                 </label>
                 <select
                   name="employeeId"
                   onChange={handleChange}
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                   required
                 >
                   <option value="">Select Employee</option>
                   {employees.map((emp) => (
                     <option key={emp._id} value={emp._id}>
-                      {emp.employeeId}
+                      {emp.employeeId} - {emp.userId?.name}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/*Designation*/}
+              {/* Basic Salary */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-600 mb-1">
                   Basic Salary
                 </label>
                 <input
-                  type="numbers"
+                  type="number" // Fixed typo from 'numbers'
                   name="basicSalary"
                   onChange={handleChange}
-                  placeholder="Basic Salary"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  placeholder="Enter Amount"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                   required
                 />
               </div>
 
-              {/*Allowances*/}
+              {/* Allowances */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Allowance
+                <label className="block text-sm font-bold text-gray-600 mb-1">
+                  Allowances
                 </label>
                 <input
                   type="number"
                   name="allowances"
                   onChange={handleChange}
-                  placeholder="Allowances"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  placeholder="Enter Allowances"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                   required
                 />
               </div>
 
-              {/*Deductions*/}
+              {/* Deductions */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-600 mb-1">
                   Deductions
                 </label>
                 <input
                   type="number"
                   name="deductions"
                   onChange={handleChange}
-                  placeholder="Deductions"
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  placeholder="Enter Deductions"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                   required
                 />
               </div>
 
-              {/*Pay Date*/}
+              {/* Pay Date */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-bold text-gray-600 mb-1">
                   Pay Date
                 </label>
                 <input
                   type="date"
                   name="payDate"
                   onChange={handleChange}
-                  className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+                  className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
                   required
                 />
               </div>
@@ -169,14 +181,16 @@ const Add = () => {
 
             <button
               type="submit"
-              className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md"
+              className="w-full mt-8 bg-teal-600 hover:bg-teal-700 text-white font-extrabold py-3 px-4 rounded-xl shadow-md transition-all"
             >
-              Add Salary
+              Confirm Salary Entry
             </button>
           </form>
         </div>
       ) : (
-        <div>Loading....</div>
+        <div className="flex justify-center items-center h-screen text-teal-600 font-bold italic">
+          Loading Department Data...
+        </div>
       )}
     </>
   );
