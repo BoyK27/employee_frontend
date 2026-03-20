@@ -24,7 +24,7 @@ const AttendanceReport = () => {
         },
       );
       if (response.data.success) {
-        if (skip == 0) {
+        if (skip === 0) {
           setReport(response.data.groupData);
         } else {
           setReport((preData) => ({ ...preData, ...response.data.groupData }));
@@ -33,97 +33,149 @@ const AttendanceReport = () => {
       setLoading(false);
     } catch (error) {
       alert(error.message);
+      setLoading(false);
     }
   };
 
   React.useEffect(() => {
     fetchReport();
   }, [skip, dateFilter]);
+
   const handleLoadMore = () => {
     setSkip((prevSkip) => prevSkip + limit);
-    fetchReport();
   };
+
   return (
-    <div className="min-h-screen p-10 bg-white">
-      <h2 className="text-center text-2xl font-bold">Attendance Report</h2>
-      <div>
-        <h2 className="text-xl font-semibold">Filter by Date</h2>
-        <input
-          type="date"
-          className="border bg-gray-100"
-          onChange={(e) => {
-            (setDateFilter(e.target.value), setSkip(0));
-          }}
-        />
-      </div>
-      {loading ? (
-        <div>Loading...</div>
-      ) : (
-        Object.entries(report).map(([date, record]) => (
-          <div key={date} className="my-4">
-            <h3 className="text-lg font-semibold">{date}</h3>
-            <table className="w-full mt-4 border border-gray-300 rounded-lg overflow-hidden shadow-sm">
-              <thead className="bg-teal-600 text-white">
-                <tr>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
-                    S No
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
-                    Employee ID
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
-                    Name
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
-                    Department
-                  </th>
-                  <th className="px-4 py-2 text-left text-sm font-semibold">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {record.map((data, i) => (
-                  <tr
-                    key={data.employeeId}
-                    className="hover:bg-gray-100 transition-colors"
-                  >
-                    <td className="px-4 py-2 text-sm text-gray-700">{i + 1}</td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {data.employeeId}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {data.employeeName}
-                    </td>
-                    <td className="px-4 py-2 text-sm text-gray-700">
-                      {data.departmentName}
-                    </td>
-                    <td className="px-4 py-2 text-sm font-medium">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs ${
-                          data.status === "Present"
-                            ? "bg-green-100 text-green-700"
-                            : data.status === "Absent"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-gray-100 text-gray-600"
-                        }`}
-                      >
-                        {data.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="min-h-screen p-4 md:p-10 bg-gray-50">
+      <div className="max-w-6xl mx-auto bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+        <h2 className="text-center text-2xl md:text-3xl font-extrabold text-gray-800 mb-8">
+          Attendance Report
+        </h2>
+
+        {/* Filter Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10 pb-6 border-b border-gray-100">
+          <div>
+            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 ml-1">
+              Filter by Date
+            </h2>
+            <input
+              type="date"
+              className="w-full md:w-64 p-3 border border-gray-200 bg-gray-50 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all cursor-pointer"
+              onChange={(e) => {
+                setDateFilter(e.target.value);
+                setSkip(0);
+              }}
+            />
           </div>
-        ))
-      )}
-      <button
-        className="mt-4 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
-        onClick={handleLoadMore}
-      >
-        Load More
-      </button>
+
+          <div className="hidden md:block text-right">
+            <p className="text-xs text-gray-400 font-medium">
+              Showing report for
+            </p>
+            <p className="text-sm font-bold text-teal-600">
+              {dateFilter || "All Dates"}
+            </p>
+          </div>
+        </div>
+
+        {/* Report Content */}
+        {Object.keys(report).length > 0
+          ? Object.entries(report).map(([date, record]) => (
+              <div key={date} className="mb-10">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-8 w-1 bg-teal-500 rounded-full"></div>
+                  <h3 className="text-lg font-bold text-gray-700">{date}</h3>
+                </div>
+
+                {/* Responsive Table Wrapper */}
+                <div className="overflow-x-auto rounded-xl border border-gray-200 shadow-sm">
+                  <table className="w-full text-sm text-left border-collapse">
+                    <thead className="bg-teal-600 text-white">
+                      <tr>
+                        <th className="px-4 py-4 font-bold uppercase text-[11px] tracking-widest text-center w-16">
+                          S No
+                        </th>
+                        <th className="px-4 py-4 font-bold uppercase text-[11px] tracking-widest min-w-[120px]">
+                          Emp ID
+                        </th>
+                        <th className="px-4 py-4 font-bold uppercase text-[11px] tracking-widest min-w-[150px]">
+                          Full Name
+                        </th>
+                        <th className="px-4 py-4 font-bold uppercase text-[11px] tracking-widest min-w-[150px]">
+                          Department
+                        </th>
+                        <th className="px-4 py-4 font-bold uppercase text-[11px] tracking-widest text-center w-32">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {record.map((data, i) => (
+                        <tr
+                          key={data.employeeId}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-4 py-4 text-gray-500 text-center font-medium">
+                            {i + 1}
+                          </td>
+                          <td className="px-4 py-4 font-bold text-gray-700">
+                            {data.employeeId}
+                          </td>
+                          <td className="px-4 py-4 font-medium text-gray-600">
+                            {data.employeeName}
+                          </td>
+                          <td className="px-4 py-4 text-gray-600">
+                            {data.departmentName}
+                          </td>
+                          <td className="px-4 py-4 text-center">
+                            <span
+                              className={`px-3 py-1 rounded-full text-[11px] font-bold border ${
+                                data.status === "Present"
+                                  ? "bg-green-50 text-green-700 border-green-100"
+                                  : data.status === "Absent"
+                                    ? "bg-red-50 text-red-700 border-red-100"
+                                    : "bg-yellow-50 text-yellow-700 border-yellow-100"
+                              }`}
+                            >
+                              {data.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            ))
+          : !loading && (
+              <div className="text-center py-20 text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                No attendance data found for this period.
+              </div>
+            )}
+
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="flex justify-center items-center py-10 space-x-3">
+            <div className="w-6 h-6 border-2 border-teal-600 border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-teal-600 font-bold text-sm">
+              Updating report...
+            </p>
+          </div>
+        )}
+
+        {/* Load More Button */}
+        {!loading && Object.keys(report).length > 0 && (
+          <div className="mt-10 flex justify-center">
+            <button
+              className="px-10 py-4 bg-teal-600 text-white font-bold rounded-xl hover:bg-teal-700 transition-all shadow-lg shadow-teal-100 active:scale-95 disabled:opacity-50"
+              onClick={handleLoadMore}
+              disabled={loading}
+            >
+              Load More Records
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
