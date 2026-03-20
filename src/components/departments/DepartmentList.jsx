@@ -56,73 +56,110 @@ const DepartmentList = () => {
     setFilteredDepartments(records);
   };
 
-  // Professional Styling for the Data Table
+  // Professional Styling for the Data Table (Desktop)
   const customStyles = {
-    rows: {
-      style: {
-        minHeight: "55px", // slightly taller for easier touch on mobile
-      },
-    },
     headCells: {
       style: {
-        backgroundColor: "#f3f4f6",
-        fontWeight: "bold",
-        color: "#1f2937",
+        backgroundColor: "#f9fafb",
+        fontWeight: "700",
+        color: "#374151",
+        fontSize: "14px",
+      },
+    },
+    rows: {
+      style: {
+        minHeight: "60px",
+        fontSize: "14px",
+        color: "#4b5563",
       },
     },
   };
 
   return (
-    <div className="p-3 md:p-6">
+    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       {depLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600"></div>
+        <div className="flex flex-col justify-center items-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
+          <p className="text-gray-500 font-medium">Loading Departments...</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-md border border-gray-100">
-          <div className="p-4 md:p-6 border-b border-gray-100">
-            <h3 className="text-xl md:text-2xl font-bold text-gray-800 text-center md:text-left">
+        <div className="max-w-6xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-8">
+            <h3 className="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
               Manage Departments
             </h3>
+            <p className="text-gray-500 text-sm mt-1">
+              Organize and monitor company branches
+            </p>
           </div>
 
-          <div className="p-4 md:p-6">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-              {/* Search Field */}
-              <div className="relative w-full md:w-72">
-                <input
-                  type="text"
-                  placeholder="Search Department..."
-                  className="w-full pl-4 pr-10 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition-all text-sm"
-                  onChange={filterDepartments}
-                />
-              </div>
-
-              {/* Add Button */}
-              <Link
-                to="/admin-dashboard/add-department"
-                className="inline-flex items-center justify-center px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-all shadow-sm active:scale-95 text-sm"
-              >
-                + Add New Department
-              </Link>
-            </div>
-
-            {/* Table Wrapper */}
-            <div className="mt-6 border rounded-lg overflow-hidden shadow-inner">
-              <DataTable
-                columns={columns}
-                data={filteredDepartments}
-                pagination
-                responsive
-                highlightOnHover
-                customStyles={customStyles}
-                noDataComponent={
-                  <div className="p-10 text-gray-400">
-                    No departments found.
-                  </div>
-                }
+          {/* Search and Action Bar */}
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
+            <div className="relative w-full md:w-80">
+              <input
+                type="text"
+                placeholder="Search Department..."
+                className="w-full pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                onChange={filterDepartments}
               />
             </div>
+
+            <Link
+              to="/admin-dashboard/add-department"
+              className="w-full md:w-auto text-center px-8 py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition-all shadow-lg shadow-teal-100 active:scale-95"
+            >
+              + Add New Department
+            </Link>
+          </div>
+
+          {/* --- MOBILE VIEW (Cards) --- */}
+          <div className="grid grid-cols-1 gap-4 md:hidden">
+            {filteredDepartments.map((dep) => (
+              <div
+                key={dep._id}
+                className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100"
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      Department Name
+                    </span>
+                    <h4 className="text-lg font-bold text-gray-800 mt-1">
+                      {dep.dep_name}
+                    </h4>
+                  </div>
+                  <span className="text-xs font-bold text-gray-300 bg-gray-50 px-2 py-1 rounded-md">
+                    #{dep.sno}
+                  </span>
+                </div>
+
+                {/* Buttons Only - No Labels */}
+                <div className="border-t pt-4 flex justify-around">
+                  {dep.action}
+                </div>
+              </div>
+            ))}
+            {filteredDepartments.length === 0 && (
+              <div className="text-center py-12 bg-white rounded-2xl border border-dashed border-gray-200">
+                <p className="text-gray-400">No departments found.</p>
+              </div>
+            )}
+          </div>
+
+          {/* --- DESKTOP VIEW (Table) --- */}
+          <div className="hidden md:block bg-white rounded-2xl shadow-xl shadow-gray-200/50 overflow-hidden border border-gray-100">
+            <DataTable
+              columns={columns}
+              data={filteredDepartments}
+              pagination
+              responsive
+              highlightOnHover
+              customStyles={customStyles}
+              noDataComponent={
+                <div className="p-10 text-gray-400">No departments found.</div>
+              }
+            />
           </div>
         </div>
       )}
