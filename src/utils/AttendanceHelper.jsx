@@ -85,4 +85,31 @@ const AttendanceHelper = ({ status, employeeId, statusChange }) => {
   );
 };
 
+return (
+  <div>
+    {/* Use !status to catch null, undefined, or empty strings */}
+    {!status || status === "Not Marked" ? (
+      <div className="flex space-x-2">
+        <button
+          className="px-3 py-1 bg-green-500 text-white rounded-md text-sm"
+          onClick={() => markEmployee("present", employeeId)}
+        >
+          Present
+        </button>
+        <button
+          className="px-3 py-1 bg-red-500 text-white rounded-md text-sm"
+          onClick={() => markEmployee("absent", employeeId)}
+        >
+          Absent
+        </button>
+        {/* Add other buttons if needed */}
+      </div>
+    ) : (
+      <span className="capitalize font-semibold text-teal-600 border border-teal-200 px-3 py-1 rounded-full bg-teal-50">
+        {status}
+      </span>
+    )}
+  </div>
+);
+
 export { AttendanceHelper };
