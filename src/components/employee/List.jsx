@@ -11,6 +11,12 @@ const List = () => {
 
   useEffect(() => {
     const fetchEmployees = async () => {
+      const token = localStorage.getItem("token");
+      console.log("Current Token:", token); // CHECK THIS ON DESKTOP
+      if (!token) {
+        alert("No token found! Please login again.");
+        return;
+      }
       setEmpLoading(true);
       try {
         const response = await axios.get(
