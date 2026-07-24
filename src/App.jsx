@@ -31,7 +31,7 @@ import EditStudent from "./components/student/Edit";
 // Leave Components (Employee)
 import LeaveList from "./components/leaves/List";
 import AddLeave from "./components/leaves/Add";
-import LeaveDetail from "./components/leaves/Detail";
+import LeaveDetail from "./components/leaves/Details";
 
 // Student Leave Components
 import StudentLeaveList from "./components/studentLeaves/List";
