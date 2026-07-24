@@ -32,11 +32,11 @@ const StudentAttendanceReport = () => {
       );
 
       if (response.data.success) {
-        const records =
-          response.data.attendance || response.data.groupData || [];
+        // FIX: Fetch response.data.report matching your controller's return key
+        const records = response.data.report || [];
         setAttendance(records);
 
-        // Calculate attendance summary stats
+        // Summary calculations
         const total = records.length;
         const presentCount = records.filter(
           (r) => r.status?.toLowerCase() === "present",
@@ -64,9 +64,7 @@ const StudentAttendanceReport = () => {
       }
     } catch (error) {
       console.error("Error fetching attendance report:", error);
-      alert(
-        error.response?.data?.error || "Failed to load your attendance report.",
-      );
+      alert(error.response?.data?.error || "Failed to load attendance report.");
     } finally {
       setLoading(false);
     }
