@@ -128,7 +128,7 @@ const List = () => {
         ))}
         {filteredEmployee.length === 0 && (
           <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
-            <p className="text-gray-400">No employees found.</p>
+            <p className="text-gray-400">No employee found.</p>
           </div>
         )}
       </div>
