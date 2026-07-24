@@ -28,6 +28,14 @@ const AddStudent = () => {
     }
   };
 
+  // Helper to check if current form choice is senior (Forms 4, 5, L6, U6)
+  const isSeniorClass = [
+    "Form 4",
+    "Form 5",
+    "Lower Sixth",
+    "Upper Sixth",
+  ].includes(formData.form);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -80,15 +88,15 @@ const AddStudent = () => {
             name="email"
             type="email"
             onChange={handleChange}
-            placeholder="student@institution.edu"
+            placeholder="student@school.edu"
             required
           />
           <FormInput
             label="Matricule / Student ID"
-            name="matricule"
+            name="studentId"
             type="text"
             onChange={handleChange}
-            placeholder="e.g. SE2026-001"
+            placeholder="e.g. STU2026-001"
             required
           />
           <FormInput
@@ -110,27 +118,46 @@ const AddStudent = () => {
             <option value="female">Female</option>
           </FormSelect>
 
+          {/* FORM / CLASS SELECTION */}
           <FormSelect
-            label="Academic Level"
-            name="level"
+            label="Form / Class Level"
+            name="form"
             onChange={handleChange}
             required
           >
-            <option value="">Select Level</option>
-            <option value="100">Level 100 (HND 1 / Year 1)</option>
-            <option value="200">Level 200 (HND 2 / Year 2)</option>
-            <option value="300">Level 300 (Degree / Year 3)</option>
-            <option value="400">Level 400 (Master / Year 4)</option>
+            <option value="">Select Class</option>
+            <option value="Form 1">Form 1</option>
+            <option value="Form 2">Form 2</option>
+            <option value="Form 3">Form 3</option>
+            <option value="Form 4">Form 4</option>
+            <option value="Form 5">Form 5</option>
+            <option value="Lower Sixth">Lower Sixth</option>
+            <option value="Upper Sixth">Upper Sixth</option>
           </FormSelect>
 
-          <FormInput
-            label="Specialization / Program"
-            name="program"
-            type="text"
+          {/* STREAM / ARM BRANCH SELECTION */}
+          <FormSelect
+            label="Class Arm / Stream"
+            name="stream"
             onChange={handleChange}
-            placeholder="e.g. Software Engineering"
             required
-          />
+          >
+            <option value="">Select Stream / Arm</option>
+            {!isSeniorClass ? (
+              <>
+                <option value="A">Branch A</option>
+                <option value="B">Branch B</option>
+                <option value="C">Branch C</option>
+                <option value="D">Branch D</option>
+                <option value="E">Branch E</option>
+              </>
+            ) : (
+              <>
+                <option value="Arts">Arts</option>
+                <option value="Science">Science</option>
+              </>
+            )}
+          </FormSelect>
 
           <FormSelect
             label="Department / Faculty"
@@ -166,9 +193,7 @@ const AddStudent = () => {
           </div>
 
           <FormSelect label="Role" name="role" onChange={handleChange} required>
-            <option value="">Select Role</option>
             <option value="student">Student</option>
-            <option value="admin">Admin</option>
           </FormSelect>
 
           <div className="md:col-span-2">
