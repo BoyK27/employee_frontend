@@ -27,10 +27,10 @@ import AddStudent from "./components/student/Add";
 import ViewStudent from "./components/student/View";
 import EditStudent from "./components/student/Edit";
 import StudentSummary from "./components/StudentDashboard/Summary";
-import StudentLeaveList from "./components/studentLeave/StudentLeaveList";
-import AddStudentLeave from "./components/studentLeave/AddStudentLeave";
-import StudentLeaveDetails from "./components/studentLeave/StudentLeaveDetails";
-import StudentAttendanceReport from "./components/studentLeaves/Details";
+import StudentLeaveList from "./components/studentLeaves/List";
+import AddStudentLeave from "./components/studentLeaves/Add";
+import StudentLeaveDetails from "./components/studentLeaves/Details";
+import StudentAttendanceReport from "./components/attendance/StudentAttendanceReport";
 
 // Leave & Attendance Components
 import LeaveList from "./components/leaves/List";
