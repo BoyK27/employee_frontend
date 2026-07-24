@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useAuth } from "../context/authContext";
 import { useNavigate } from "react-router-dom";
-import { FaEye, FaEyeSlash } from "react-icons/fa"; // Added icons
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // Visibility state
+  const [showPassword, setShowPassword] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -26,11 +26,18 @@ function Login() {
       );
 
       if (response.data.success) {
-        login(response.data.user);
+        const user = response.data.user;
+        login(user);
         localStorage.setItem("token", response.data.token);
-        response.data.user.role === "admin"
-          ? navigate("/admin-dashboard")
-          : navigate("/employee-dashboard");
+
+        // ROUTE BASED ON ROLE
+        if (user.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (user.role === "student") {
+          navigate("/student-dashboard");
+        } else {
+          navigate("/employee-dashboard");
+        }
       }
     } catch (error) {
       setError(
@@ -43,7 +50,7 @@ function Login() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 p-6">
-      {/* Branding - Responsive Font Sizes */}
+      {/* Branding */}
       <div className="mb-8 text-center animate-fade-in">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tighter drop-shadow-xl">
           M-HUB ORCHARD
@@ -53,9 +60,11 @@ function Login() {
         </p>
       </div>
 
-      {/* Login Card - Specific widths for small screens */}
+      {/* Login Card */}
       <div
-        className={`w-full max-w-[95%] sm:max-w-[420px] bg-white rounded-3xl shadow-2xl p-6 sm:p-10 transition-all duration-300 ${error ? "animate-shake" : ""}`}
+        className={`w-full max-w-[95%] sm:max-w-[420px] bg-white rounded-3xl shadow-2xl p-6 sm:p-10 transition-all duration-300 ${
+          error ? "animate-shake" : ""
+        }`}
       >
         <h2 className="text-2xl font-bold mb-2 text-gray-800 text-center">
           Welcome Back
