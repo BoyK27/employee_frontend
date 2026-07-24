@@ -4,20 +4,27 @@ import {
   FaBuilding,
   FaCalendarAlt,
   FaCogs,
-  FaGraduationCap, // Added for Students
+  FaGraduationCap,
   FaMoneyBillWave,
   FaRegCalendar,
   FaTachometerAlt,
   FaUsers,
   FaTimes,
+  FaUserGraduation,
+  FaClipboardList,
 } from "react-icons/fa";
 import { AiOutlineFileText } from "react-icons/ai";
 
-// Destructure the props from AdminDashboard
 const AdminSidebar = ({ isOpen, toggleSidebar }) => {
+  const closeMobileSidebar = () => {
+    if (window.innerWidth < 768) {
+      toggleSidebar();
+    }
+  };
+
   return (
     <>
-      {/* Mobile Overlay: Darkens the background when menu is open */}
+      {/* Mobile Overlay */}
       <div
         className={`fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden transition-opacity duration-300 ${
           isOpen ? "opacity-100 visible" : "opacity-0 invisible"
@@ -27,15 +34,14 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
 
       {/* Sidebar Container */}
       <div
-        className={`bg-gray-800 text-white h-screen fixed left-0 top-0 bottom-0 z-50 w-64 transform transition-transform duration-300 ease-in-out 
+        className={`bg-gray-800 text-white h-screen fixed left-0 top-0 bottom-0 z-50 w-64 transform transition-transform duration-300 ease-in-out overflow-y-auto
         ${isOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0`}
       >
-        <div className="bg-teal-600 h-12 flex items-center justify-between px-4">
-          <h3 className="text-2xl font-sans-serif flex-1 text-center">
-            Employee MS
+        {/* Header */}
+        <div className="bg-teal-600 h-12 flex items-center justify-between px-4 sticky top-0 z-10">
+          <h3 className="text-2xl font-sans-serif flex-1 text-center font-bold">
+            EMS Portal
           </h3>
-
-          {/* Mobile Close Button */}
           <button
             onClick={toggleSidebar}
             className="md:hidden text-white text-xl"
@@ -44,51 +50,47 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
           </button>
         </div>
 
-        <div className="px-2 mt-4 space-y-1">
+        {/* Navigation Items */}
+        <div className="px-2 my-4 space-y-1">
+          {/* Main Dashboard */}
           <NavLink
             to="/admin-dashboard"
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
             end
-            onClick={() => window.innerWidth < 768 && toggleSidebar()} // Auto-close on link click (mobile)
+            onClick={closeMobileSidebar}
           >
             <FaTachometerAlt />
             <span>Dashboard</span>
           </NavLink>
+
+          {/* Core Modules */}
+          <NavLink
+            to="/admin-dashboard/departments"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaBuilding />
+            <span>Departments</span>
+          </NavLink>
+
+          {/* --- EMPLOYEE SECTION --- */}
+          <div className="pt-2 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Employee Management
+          </div>
 
           <NavLink
             to="/admin-dashboard/employees"
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+            onClick={closeMobileSidebar}
           >
             <FaUsers />
-            <span>Employee</span>
-          </NavLink>
-
-          {/* New Students Link */}
-          <NavLink
-            to="/admin-dashboard/students"
-            className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
-            }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
-          >
-            <FaGraduationCap />
-            <span>Students</span>
-          </NavLink>
-
-          <NavLink
-            to="/admin-dashboard/departments"
-            className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
-            }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
-          >
-            <FaBuilding />
-            <span>Departments</span>
+            <span>Employees</span>
           </NavLink>
 
           <NavLink
@@ -96,10 +98,10 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+            onClick={closeMobileSidebar}
           >
             <FaCalendarAlt />
-            <span>Leaves</span>
+            <span>Employee Leaves</span>
           </NavLink>
 
           <NavLink
@@ -107,7 +109,7 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+            onClick={closeMobileSidebar}
           >
             <FaMoneyBillWave />
             <span>Salary</span>
@@ -118,7 +120,7 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+            onClick={closeMobileSidebar}
           >
             <FaRegCalendar />
             <span>Attendance</span>
@@ -129,22 +131,74 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+            onClick={closeMobileSidebar}
           >
             <AiOutlineFileText />
             <span>Attendance Report</span>
           </NavLink>
 
+          {/* --- STUDENT SECTION --- */}
+          <div className="pt-3 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Student Management
+          </div>
+
           <NavLink
-            to="/admin-dashboard/settings"
+            to="/admin-dashboard/students"
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }
-            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+            onClick={closeMobileSidebar}
           >
-            <FaCogs />
-            <span>Setting</span>
+            <FaGraduationCap />
+            <span>Students</span>
           </NavLink>
+
+          <NavLink
+            to="/admin-dashboard/student-leaves"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaCalendarAlt />
+            <span>Student Leaves</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin-dashboard/student-attendance"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaClipboardList />
+            <span>Student Attendance</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin-dashboard/student-attendance-report"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <AiOutlineFileText />
+            <span>Student Report</span>
+          </NavLink>
+
+          {/* System Settings */}
+          <div className="pt-3">
+            <NavLink
+              to="/admin-dashboard/settings"
+              className={({ isActive }) =>
+                `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+              }
+              onClick={closeMobileSidebar}
+            >
+              <FaCogs />
+              <span>Settings</span>
+            </NavLink>
+          </div>
         </div>
       </div>
     </>
