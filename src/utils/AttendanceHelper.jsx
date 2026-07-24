@@ -1,6 +1,10 @@
 import axios from "axios";
 import React from "react";
 
+/* =========================================================
+   1. EMPLOYEE ATTENDANCE HELPER & COLUMNS
+   ========================================================= */
+
 export const columns = [
   {
     name: "S No",
@@ -27,11 +31,11 @@ export const columns = [
   {
     name: "Action",
     selector: (row) => row.action,
-    center: "true",
+    center: true,
   },
 ];
 
-const AttendanceHelper = ({ status, employeeId, statusChange }) => {
+export const AttendanceHelper = ({ status, employeeId, statusChange }) => {
   const markEmployee = async (status, employeeId) => {
     try {
       const response = await axios.put(
@@ -47,36 +51,35 @@ const AttendanceHelper = ({ status, employeeId, statusChange }) => {
         statusChange();
       }
     } catch (error) {
-      alert("Error updating attendance");
+      alert(error.response?.data?.error || "Error updating attendance");
     }
   };
 
-  // This return block must be INSIDE the AttendanceHelper function
   return (
     <div>
       {!status || status === "Not Marked" ? (
         <div className="flex space-x-2">
           <button
             className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm transition-colors"
-            onClick={() => markEmployee("present", employeeId)}
+            onClick={() => markEmployee("Present", employeeId)}
           >
             Present
           </button>
           <button
             className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm transition-colors"
-            onClick={() => markEmployee("absent", employeeId)}
+            onClick={() => markEmployee("Absent", employeeId)}
           >
             Absent
           </button>
           <button
             className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-md text-sm transition-colors"
-            onClick={() => markEmployee("sick", employeeId)}
+            onClick={() => markEmployee("Sick", employeeId)}
           >
             Sick
           </button>
           <button
             className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm transition-colors"
-            onClick={() => markEmployee("leave", employeeId)}
+            onClick={() => markEmployee("Leave", employeeId)}
           >
             Leave
           </button>
@@ -90,4 +93,98 @@ const AttendanceHelper = ({ status, employeeId, statusChange }) => {
   );
 };
 
-export { AttendanceHelper };
+/* =========================================================
+   2. STUDENT ATTENDANCE HELPER & COLUMNS
+   ========================================================= */
+
+export const studentColumns = [
+  {
+    name: "S No",
+    selector: (row) => row.sno,
+    width: "70px",
+  },
+  {
+    name: "Student ID",
+    selector: (row) => row.studentId,
+    sortable: true,
+    width: "130px",
+  },
+  {
+    name: "Student Name",
+    selector: (row) => row.name,
+    sortable: true,
+    width: "170px",
+  },
+  {
+    name: "Department / Class",
+    selector: (row) => row.department,
+    width: "170px",
+  },
+  {
+    name: "Action",
+    selector: (row) => row.action,
+    center: true,
+  },
+];
+
+export const StudentAttendanceHelper = ({
+  status,
+  studentId,
+  statusChange,
+}) => {
+  const markStudent = async (status, studentId) => {
+    try {
+      const response = await axios.put(
+        `https://ems-backend-hazel.vercel.app/api/attendance/student/update/${studentId}`,
+        { status },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      );
+      if (response.data.success) {
+        statusChange();
+      }
+    } catch (error) {
+      alert(error.response?.data?.error || "Error updating student attendance");
+    }
+  };
+
+  return (
+    <div>
+      {!status || status === "Not Marked" ? (
+        <div className="flex space-x-2">
+          <button
+            className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded-md text-sm transition-colors"
+            onClick={() => markStudent("Present", studentId)}
+          >
+            Present
+          </button>
+          <button
+            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded-md text-sm transition-colors"
+            onClick={() => markStudent("Absent", studentId)}
+          >
+            Absent
+          </button>
+          <button
+            className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white rounded-md text-sm transition-colors"
+            onClick={() => markStudent("Sick", studentId)}
+          >
+            Sick
+          </button>
+          <button
+            className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm transition-colors"
+            onClick={() => markStudent("Leave", studentId)}
+          >
+            Leave
+          </button>
+        </div>
+      ) : (
+        <span className="capitalize font-semibold text-indigo-600 border border-indigo-200 px-3 py-1 rounded-full bg-indigo-50">
+          {status}
+        </span>
+      )}
+    </div>
+  );
+};

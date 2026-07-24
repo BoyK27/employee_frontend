@@ -4,11 +4,12 @@ import {
   FaBuilding,
   FaCalendarAlt,
   FaCogs,
+  FaGraduationCap, // Added for Students
   FaMoneyBillWave,
   FaRegCalendar,
   FaTachometerAlt,
   FaUsers,
-  FaTimes, // Added for the close button
+  FaTimes,
 } from "react-icons/fa";
 import { AiOutlineFileText } from "react-icons/ai";
 
@@ -53,7 +54,7 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
             onClick={() => window.innerWidth < 768 && toggleSidebar()} // Auto-close on link click (mobile)
           >
             <FaTachometerAlt />
-            <span>DashBoard</span>
+            <span>Dashboard</span>
           </NavLink>
 
           <NavLink
@@ -65,6 +66,18 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
           >
             <FaUsers />
             <span>Employee</span>
+          </NavLink>
+
+          {/* New Students Link */}
+          <NavLink
+            to="/admin-dashboard/students"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={() => window.innerWidth < 768 && toggleSidebar()}
+          >
+            <FaGraduationCap />
+            <span>Students</span>
           </NavLink>
 
           <NavLink
