@@ -39,9 +39,9 @@ const EditStudent = () => {
           const studentData = response.data.student;
           setStudent({
             name: studentData.userId?.name || studentData.name || "",
-            matricule: studentData.matricule || studentData.studentId || "",
-            level: studentData.level || "",
-            program: studentData.program || "",
+            matricule: studentData.studentId || studentData.matricule || "",
+            level: studentData.level || studentData.form || "",
+            program: studentData.program || studentData.stream || "",
             department:
               studentData.department?._id || studentData.department || "",
           });

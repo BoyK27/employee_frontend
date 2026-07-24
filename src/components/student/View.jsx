@@ -68,7 +68,7 @@ const ViewStudent = () => {
                   Matricule:
                 </p>
                 <p className="font-bold text-teal-600 text-base">
-                  {student.matricule || student.studentId || "N/A"}
+                  {student.studentId || student.matricule || "N/A"}
                 </p>
               </div>
 
@@ -95,7 +95,9 @@ const ViewStudent = () => {
                   Academic Level:
                 </p>
                 <p className="font-medium text-gray-700">
-                  Level {student.level || "N/A"}
+                  {student.level || student.form
+                    ? `Level ${student.level || student.form}`
+                    : "N/A"}
                 </p>
               </div>
 
@@ -104,7 +106,7 @@ const ViewStudent = () => {
                   Program:
                 </p>
                 <p className="font-medium text-gray-700">
-                  {student.program || "N/A"}
+                  {student.program || student.stream || "N/A"}
                 </p>
               </div>
 
