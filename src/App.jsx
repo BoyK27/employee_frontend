@@ -49,7 +49,7 @@ import StudentAttendance from "./components/attendance/StudentAttendance";
 import StudentAttendanceReport from "./components/attendance/StudentAttendanceReport";
 
 // Settings Component
-import Setting from "./components/dashboard/Setting";
+import Setting from "./components/EmployeeDashboard/Settings";
 
 function App() {
   return (
