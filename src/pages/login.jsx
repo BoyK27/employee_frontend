@@ -33,16 +33,14 @@ function Login() {
         // ROUTE BASED ON ROLE
         if (user.role === "admin") {
           navigate("/admin-dashboard");
-        } else if (user.role === "student") {
-          navigate("/student-dashboard");
-        } else {
+        } else if (user.role === "employee") {
           navigate("/employee-dashboard");
+        } else {
+          navigate("/student-dashboard");
         }
       }
     } catch (error) {
-      setError(
-        error.response?.data?.error || "Server Error. Please try again.",
-      );
+      setError(error.response?.data?.error || "Error Login in.");
     } finally {
       setLoading(false);
     }
