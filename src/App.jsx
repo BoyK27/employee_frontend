@@ -21,7 +21,6 @@ import EmployeeList from "./components/employee/List";
 import AddEmployee from "./components/employee/Add";
 import ViewEmployee from "./components/employee/View";
 import EditEmployee from "./components/employee/Edit";
-import LeaveTable from "./components/leaves/Table";
 
 // Student Components
 import StudentList from "./components/student/List";
@@ -93,9 +92,8 @@ function App() {
           <Route path="students/edit/:id" element={<EditStudent />} />
 
           {/* Employee Leaves */}
-          <Route path="leaves" element={<LeaveTable />} />
+          <Route path="leaves" element={<LeaveList />} />
           <Route path="leaves/:id" element={<LeaveDetail />} />
-          <Route path="employees/leaves/:id" element={<LeaveList />} />
 
           {/* Student Leaves */}
           <Route path="student-leaves" element={<StudentLeaveTable />} />
