@@ -6,7 +6,9 @@ import { Eye, EyeOff } from "lucide-react";
 
 const AddStudent = () => {
   const [departments, setDepartments] = useState([]);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState({
+    role: "student",
+  });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
@@ -28,7 +30,6 @@ const AddStudent = () => {
     }
   };
 
-  // Helper to check if current form choice is senior (Forms 4, 5, L6, U6)
   const isSeniorClass = [
     "Form 4",
     "Form 5",
@@ -145,11 +146,11 @@ const AddStudent = () => {
             <option value="">Select Stream / Arm</option>
             {!isSeniorClass ? (
               <>
-                <option value="A">Branch A</option>
-                <option value="B">Branch B</option>
-                <option value="C">Branch C</option>
-                <option value="D">Branch D</option>
-                <option value="E">Branch E</option>
+                <option value="Branch A">Branch A</option>
+                <option value="Branch B">Branch B</option>
+                <option value="Branch C">Branch C</option>
+                <option value="Branch D">Branch D</option>
+                <option value="Branch E">Branch E</option>
               </>
             ) : (
               <>
@@ -192,12 +193,18 @@ const AddStudent = () => {
             </button>
           </div>
 
-          <FormSelect label="Role" name="role" onChange={handleChange} required>
+          <FormSelect
+            label="Role"
+            name="role"
+            value={formData.role || "student"}
+            onChange={handleChange}
+            required
+          >
             <option value="student">Student</option>
           </FormSelect>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-semibold text-gray-600 mb-1">
+            <label className="block text-sm font-semibold text-gray-600 mb-1 ml-1">
               Upload Student Photo
             </label>
             <input
@@ -227,7 +234,6 @@ const AddStudent = () => {
   );
 };
 
-// Reusable components
 const FormInput = ({ label, ...props }) => (
   <div className="w-full">
     <label className="block text-sm font-semibold text-gray-600 mb-1 ml-1">

@@ -21,11 +21,9 @@ const ViewStudent = () => {
           setStudent(response.data.student);
         }
       } catch (error) {
-        if (error.response && !error.response.data.success) {
-          alert(error.response.data.error);
-        } else {
-          alert("Error retrieving student details.");
-        }
+        alert(
+          error.response?.data?.error || "Error retrieving student details.",
+        );
       }
     };
     fetchStudent();
@@ -92,21 +90,19 @@ const ViewStudent = () => {
 
               <div className="flex items-center space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-sm font-bold text-gray-500 uppercase w-36">
-                  Academic Level:
+                  Class / Form:
                 </p>
                 <p className="font-medium text-gray-700">
-                  {student.level || student.form
-                    ? `Level ${student.level || student.form}`
-                    : "N/A"}
+                  {student.form || student.level || "N/A"}
                 </p>
               </div>
 
               <div className="flex items-center space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-sm font-bold text-gray-500 uppercase w-36">
-                  Program:
+                  Arm / Stream:
                 </p>
                 <p className="font-medium text-gray-700">
-                  {student.program || student.stream || "N/A"}
+                  {student.stream || student.program || "N/A"}
                 </p>
               </div>
 
