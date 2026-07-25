@@ -11,19 +11,23 @@ const List = () => {
 
   const fetchLeaves = async () => {
     try {
-      // Fallback to user?._id if route param `id` is undefined
-      const targetId = id || user?._id;
+      let endpoint = "";
 
-      if (!targetId) return;
+      if (user?.role === "admin" && !id) {
+        // Admin viewing ALL student leaves
+        endpoint = `https://ems-backend-hazel.vercel.app/api/student-leave`;
+      } else {
+        // Admin viewing specific student OR Student viewing own leaves
+        const targetId = id || user?._id;
+        if (!targetId) return;
+        endpoint = `https://ems-backend-hazel.vercel.app/api/student-leave/${targetId}/${user?.role}`;
+      }
 
-      const response = await axios.get(
-        `https://ems-backend-hazel.vercel.app/api/student-leave/${targetId}/${user?.role}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      );
+      });
 
       if (response.data.success) {
         setLeaves(response.data.leaves || []);
@@ -33,7 +37,6 @@ const List = () => {
         "Error loading leaves:",
         error.response?.data?.error || error.message,
       );
-      // Fallback to empty list so screen doesn't get stuck on spinner
       setLeaves([]);
     }
   };
