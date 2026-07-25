@@ -10,7 +10,7 @@ const ViewStudentAttendance = () => {
   const [filteredAttendance, setFilteredAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Validate parameter ID; if invalid, fallback to current user's ID
+  // Fallback to logged in user if parameter is missing or literal route string
   const effectiveId =
     id && id !== "student-attendance" && id !== "undefined"
       ? id
@@ -25,8 +25,9 @@ const ViewStudentAttendance = () => {
 
       try {
         setLoading(true);
+        // UPDATED ENDPOINT PATH HERE (/history/)
         const response = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/student-attendance/${effectiveId}`,
+          `https://ems-backend-hazel.vercel.app/api/student-attendance/history/${effectiveId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -35,7 +36,6 @@ const ViewStudentAttendance = () => {
         );
 
         if (response.data.success) {
-          // Handle both 'records' and 'attendance' array structures
           const records =
             response.data.records || response.data.attendance || [];
           setAttendance(records);
@@ -80,7 +80,6 @@ const ViewStudentAttendance = () => {
     }
   };
 
-  // Compute total counts dynamically with case-insensitive checks
   const stats = {
     total: attendance?.length || 0,
     present:
