@@ -1,25 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useAuth } from "../../context/authContext";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-const RequestLeave = () => {
+const Add = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
-
-  const [leave, setLeave] = useState({
-    userId: "",
-    leaveType: "",
-    startDate: "",
-    endDate: "",
-    reason: "",
+  const [leave, setLeave] = React.useState({
+    userId: user._id,
   });
 
-  useEffect(() => {
-    if (user?._id) {
-      setLeave((prev) => ({ ...prev, userId: user._id }));
-    }
-  }, [user]);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,7 +20,7 @@ const RequestLeave = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/student-leave/add",
+        "https://ems-backend-hazel.vercel.app/api/leave/add",
         leave,
         {
           headers: {
@@ -38,110 +28,91 @@ const RequestLeave = () => {
           },
         },
       );
-
+      console.log(response.data);
       if (response.data.success) {
-        navigate(`/student-dashboard/leaves/${user?._id}`);
+        navigate(`/employee-dashboard/leaves/${user._id}`);
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {
-        alert(
-          error.response.data.error ||
-            "An error occurred submitting the request",
-        );
-      } else {
-        alert("Server error. Please try again later.");
+        alert(error.message);
       }
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 bg-white p-8 rounded-lg shadow-md border border-gray-100">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">
-        Request Absence / Leave
-      </h2>
+    <div className="max-w-4xl mx-auto mt-10 bg-white p-8 rounded-md shadow-md">
+      <h2 className="text-2xl font-bold mb-6">Request for Leave</h2>
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col space-y-4">
-          {/* Absence Category */}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Absence Category
+              Leave Type
             </label>
             <select
               name="leaveType"
-              value={leave.leaveType}
               onChange={handleChange}
-              className="mt-1 p-2.5 block w-full border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
+              className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
               required
             >
-              <option value="">Select Absence Reason</option>
-              <option value="Medical Exemption">Medical Exemption</option>
-              <option value="Personal / Family Emergency">
-                Personal / Family Emergency
-              </option>
-              <option value="Academic Representation">
-                Academic Representation / Competition
-              </option>
-              <option value="Official Permission">Official Permission</option>
+              <option value="">Select Leave Type</option>
+              <option value="Sick Leave">Sick Leave</option>
+              <option value="Casual Leave">Casual Leave</option>
+              <option value="Annual Leave">Annual Leave</option>
             </select>
           </div>
 
-          {/* Date Range */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/*From Date*/}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                From Date
+                From: Date
               </label>
               <input
                 type="date"
+                className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
                 name="startDate"
-                value={leave.startDate}
                 onChange={handleChange}
-                className="mt-1 p-2.5 block w-full border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                 required
               />
             </div>
 
+            {/*To date*/}
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                To Date
+                To: Date
               </label>
               <input
                 type="date"
+                className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
                 name="endDate"
-                value={leave.endDate}
                 onChange={handleChange}
-                className="mt-1 p-2.5 block w-full border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
                 required
               />
             </div>
           </div>
 
-          {/* Reason / Description */}
+          {/*Description*/}
           <div>
             <label className="block text-sm font-medium text-gray-700">
-              Reason Details
+              Description
             </label>
             <textarea
               name="reason"
-              rows="4"
-              value={leave.reason}
-              placeholder="Provide a detailed explanation for your absence request..."
+              placeholder="Reason"
               onChange={handleChange}
-              className="mt-1 p-2.5 w-full border border-gray-300 rounded-md focus:ring-teal-500 focus:border-teal-500"
-              required
+              className="w-full border border-gray-300"
             ></textarea>
           </div>
         </div>
-
         <button
           type="submit"
-          className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-4 rounded-md transition-colors"
+          className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md"
         >
-          Submit Leave Request
+          Add Leave
         </button>
       </form>
     </div>
   );
 };
 
-export default RequestLeave;
+export default Add;
