@@ -48,6 +48,7 @@ import Attendance from "./components/attendance/Attendance";
 import AttendanceReport from "./components/attendance/AttendanceReport";
 import StudentAttendance from "./components/attendance/StudentAttendance";
 import StudentAttendanceReport from "./components/attendance/StudentAttendanceReport";
+import ViewStudentAttendance from "./components/attendance/ViewStudentAttendance";
 
 // Settings Component
 import Setting from "./components/EmployeeDashboard/Settings";
@@ -149,6 +150,7 @@ function App() {
           <Route path="profile/:id" element={<ViewStudent />} />
           <Route path="leaves/:id" element={<StudentLeaveList />} />
           <Route path="add-leave" element={<AddStudentLeave />} />
+          <Route path="attendance/:id" element={<ViewStudentAttendance />} />
           <Route path="setting" element={<Setting />} />
         </Route>
       </Routes>
