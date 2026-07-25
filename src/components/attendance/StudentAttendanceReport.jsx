@@ -32,11 +32,9 @@ const StudentAttendanceReport = () => {
       );
 
       if (response.data.success) {
-        // FIX: Fetch response.data.report matching your controller's return key
         const records = response.data.report || [];
         setAttendance(records);
 
-        // Summary calculations
         const total = records.length;
         const presentCount = records.filter(
           (r) => r.status?.toLowerCase() === "present",
@@ -96,7 +94,7 @@ const StudentAttendanceReport = () => {
           Attendance History & Report
         </h2>
         <p className="text-center text-gray-500 text-sm mb-8">
-          Track course presence and personal attendance history
+          Track course presence and student attendance history
         </p>
 
         {/* Attendance Stats Cards */}
@@ -192,9 +190,6 @@ const StudentAttendanceReport = () => {
                 {attendance.map((record, index) => {
                   const student = record.studentId || {};
                   const user = student.userId || {};
-                  const formattedDate = record.date
-                    ? new Date(record.date).toISOString().split("T")[0]
-                    : "N/A";
 
                   return (
                     <tr
@@ -205,15 +200,15 @@ const StudentAttendanceReport = () => {
                         {index + 1}
                       </td>
                       <td className="px-4 py-4 font-bold text-gray-700">
-                        {formattedDate}
+                        {record.date || "N/A"}
                       </td>
                       <td className="px-4 py-4 font-semibold text-gray-800">
-                        {user.name || record.name || "N/A"}
+                        {user.name || "N/A"}
                       </td>
                       <td className="px-4 py-4 text-gray-600">
                         {student.form
                           ? `${student.form} ${student.stream || ""}`.trim()
-                          : record.department || "N/A"}
+                          : student.department?.dep_name || "N/A"}
                       </td>
                       <td className="px-4 py-4 text-center">
                         <span

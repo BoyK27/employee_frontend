@@ -3,17 +3,26 @@ import { Link } from "react-router-dom";
 import DataTable from "react-data-table-component";
 import axios from "axios";
 
+const getTodayString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 const StudentAttendance = () => {
   const [attendance, setAttendance] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filteredAttendance, setFilteredAttendance] = useState([]);
   const [updatingId, setUpdatingId] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(getTodayString());
 
   const fetchAttendance = async () => {
     setLoading(true);
     try {
       const response = await axios.get(
-        "https://ems-backend-hazel.vercel.app/api/student-attendance/date",
+        `https://ems-backend-hazel.vercel.app/api/student-attendance/date?date=${selectedDate}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -24,7 +33,6 @@ const StudentAttendance = () => {
       if (response.data.success) {
         let records = response.data.attendance || [];
 
-        // If no records for today, fallback to fetch student list so we can mark them
         if (records.length === 0) {
           const studentRes = await axios.get(
             "https://ems-backend-hazel.vercel.app/api/student",
@@ -35,7 +43,7 @@ const StudentAttendance = () => {
             },
           );
           if (studentRes.data.success) {
-            records = studentRes.data.students.map((std) => ({
+            records = (studentRes.data.students || []).map((std) => ({
               studentId: std,
               status: "Not Marked",
             }));
@@ -49,7 +57,7 @@ const StudentAttendance = () => {
             _id: att._id || null,
             sno: sno++,
             rawStudentId: att.studentId._id,
-            studentId: att.studentId.studentId,
+            studentId: att.studentId.studentId || "N/A",
             name: att.studentId.userId?.name || "N/A",
             department: att.studentId.department?.dep_name || "N/A",
             form: att.studentId.form || "",
@@ -61,9 +69,7 @@ const StudentAttendance = () => {
         setFilteredAttendance(formattedData);
       }
     } catch (error) {
-      if (error.response && !error.response.data.success) {
-        alert(error.response.data.error || "Failed to load attendance");
-      }
+      alert(error.response?.data?.error || "Failed to load attendance");
     } finally {
       setLoading(false);
     }
@@ -71,9 +77,8 @@ const StudentAttendance = () => {
 
   useEffect(() => {
     fetchAttendance();
-  }, []);
+  }, [selectedDate]);
 
-  // Update/Mark Attendance Handler
   const handleStatusChange = async (studentObjId, newStatus) => {
     setUpdatingId(studentObjId);
     try {
@@ -82,6 +87,7 @@ const StudentAttendance = () => {
         {
           studentId: studentObjId,
           status: newStatus,
+          date: selectedDate,
         },
         {
           headers: {
@@ -91,7 +97,6 @@ const StudentAttendance = () => {
       );
 
       if (response.data.success) {
-        // Local state update for instant response
         const updated = attendance.map((item) =>
           item.rawStudentId === studentObjId
             ? { ...item, status: newStatus }
@@ -117,7 +122,6 @@ const StudentAttendance = () => {
     setFilteredAttendance(records);
   };
 
-  // Columns setup for desktop table
   const columns = [
     { name: "S.No", selector: (row) => row.sno, width: "70px" },
     { name: "Student ID", selector: (row) => row.studentId, sortable: true },
@@ -159,19 +163,21 @@ const StudentAttendance = () => {
 
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {/* Header Section */}
       <div className="text-center mb-6">
         <h3 className="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
           Manage Student Attendance
         </h3>
-        <div className="mt-2 inline-block bg-teal-50 px-4 py-1 rounded-full border border-teal-100">
-          <p className="text-teal-700 font-semibold text-sm">
-            Marking for: {new Date().toISOString().split("T")[0]}
-          </p>
+        <div className="mt-2 inline-flex items-center gap-2 bg-teal-50 px-4 py-1.5 rounded-full border border-teal-100">
+          <span className="text-teal-700 font-semibold text-sm">Date:</span>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="bg-transparent text-teal-800 font-bold text-sm outline-none cursor-pointer"
+          />
         </div>
       </div>
 
-      {/* Action Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">
         <div className="relative w-full md:w-80">
           <input
@@ -190,7 +196,7 @@ const StudentAttendance = () => {
         </Link>
       </div>
 
-      {/* --- MOBILE VIEW (Cards) --- */}
+      {/* Mobile View */}
       <div className="grid grid-cols-1 gap-4 md:hidden">
         {filteredAttendance.map((att) => (
           <div
@@ -230,7 +236,6 @@ const StudentAttendance = () => {
               )}
             </div>
 
-            {/* Attendance Status Action Buttons */}
             <div className="border-t pt-4">
               <ActionButtons
                 currentStatus={att.status}
@@ -249,7 +254,7 @@ const StudentAttendance = () => {
         )}
       </div>
 
-      {/* --- DESKTOP VIEW (Table) --- */}
+      {/* Desktop View */}
       <div className="hidden md:block bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
         <DataTable
           columns={columns}
@@ -261,8 +266,6 @@ const StudentAttendance = () => {
     </div>
   );
 };
-
-// --- Sub-components for Buttons and Badges ---
 
 const StatusBadge = ({ status }) => {
   const styles = {
@@ -315,7 +318,11 @@ const ActionButtons = ({
             onClick={() => onStatusChange(studentObjId, btn.label)}
             className={`px-2.5 py-1 text-xs font-bold text-white rounded-lg transition-all active:scale-95 ${
               btn.color
-            } ${isActive ? "ring-2 ring-offset-1 ring-gray-800 scale-105" : "opacity-80 hover:opacity-100"}`}
+            } ${
+              isActive
+                ? "ring-2 ring-offset-1 ring-gray-800 scale-105"
+                : "opacity-80 hover:opacity-100"
+            }`}
           >
             {btn.label}
           </button>
