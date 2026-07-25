@@ -109,7 +109,7 @@ const StudentSidebar = ({ isOpen, toggleSidebar }) => {
             onClick={handleNavClick}
           >
             <FaPlaneDeparture className="text-lg" />
-            <span>Leaves</span>
+            <span>Leave Request</span>
           </NavLink>
 
           {/* Attendance Report */}
