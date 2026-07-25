@@ -4,8 +4,8 @@ import axios from "axios";
 
 const ViewStudentAttendance = () => {
   const { id } = useParams();
-  const [attendance, setAttendance] = useState(null);
-  const [filteredAttendance, setFilteredAttendance] = useState(null);
+  const [attendance, setAttendance] = useState([]);
+  const [filteredAttendance, setFilteredAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,8 +21,11 @@ const ViewStudentAttendance = () => {
         );
 
         if (response.data.success) {
-          setAttendance(response.data.attendance);
-          setFilteredAttendance(response.data.attendance);
+          // Fix: Backend returns 'records' instead of 'attendance'
+          const records =
+            response.data.records || response.data.attendance || [];
+          setAttendance(records);
+          setFilteredAttendance(records);
         }
       } catch (error) {
         console.error("Error fetching attendance history:", error);
@@ -43,7 +46,7 @@ const ViewStudentAttendance = () => {
       setFilteredAttendance(attendance);
     } else {
       const filtered = attendance.filter(
-        (item) => item.status.toLowerCase() === status.toLowerCase(),
+        (item) => item.status?.toLowerCase() === status.toLowerCase(),
       );
       setFilteredAttendance(filtered);
     }
@@ -63,18 +66,18 @@ const ViewStudentAttendance = () => {
     }
   };
 
-  // Compute total counts
+  // Compute total counts dynamically with safe lowercased comparisons
   const stats = {
     total: attendance?.length || 0,
     present:
-      attendance?.filter((a) => a.status.toLowerCase() === "present").length ||
+      attendance?.filter((a) => a.status?.toLowerCase() === "present").length ||
       0,
     absent:
-      attendance?.filter((a) => a.status.toLowerCase() === "absent").length ||
+      attendance?.filter((a) => a.status?.toLowerCase() === "absent").length ||
       0,
     leave:
       attendance?.filter((a) =>
-        ["leave", "sick"].includes(a.status.toLowerCase()),
+        ["leave", "sick"].includes(a.status?.toLowerCase()),
       ).length || 0,
   };
 
@@ -126,7 +129,7 @@ const ViewStudentAttendance = () => {
 
         {/* Filter Buttons */}
         <div className="flex flex-wrap gap-2 justify-center mb-6">
-          {["All", "Present", "Absent", "Leave"].map((status) => (
+          {["All", "Present", "Absent", "Leave", "Sick"].map((status) => (
             <button
               key={status}
               onClick={() => filterByStatus(status)}
