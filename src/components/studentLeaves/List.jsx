@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/authContext";
 
-const StudentLeaveList = () => {
+const List = () => {
   const [leaves, setLeaves] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const { id } = useParams();
@@ -11,21 +11,30 @@ const StudentLeaveList = () => {
 
   const fetchLeaves = async () => {
     try {
+      // Fallback to user?._id if route param `id` is undefined
+      const targetId = id || user?._id;
+
+      if (!targetId) return;
+
       const response = await axios.get(
-        `https://ems-backend-hazel.vercel.app/api/student-leave/${id}/${user?.role}`,
+        `https://ems-backend-hazel.vercel.app/api/student-leave/${targetId}/${user?.role}`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         },
       );
+
       if (response.data.success) {
-        setLeaves(response.data.leaves);
+        setLeaves(response.data.leaves || []);
       }
     } catch (error) {
-      if (error.response && !error.response.data.success) {
-        console.error(error.response.data.error || error.message);
-      }
+      console.error(
+        "Error loading leaves:",
+        error.response?.data?.error || error.message,
+      );
+      // Fallback to empty list so screen doesn't get stuck on spinner
+      setLeaves([]);
     }
   };
 
@@ -37,7 +46,7 @@ const StudentLeaveList = () => {
 
   // Status Badge Helper
   const getStatusColor = (status = "") => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case "approved":
         return "bg-green-100 text-green-700 border-green-200";
       case "rejected":
@@ -50,8 +59,8 @@ const StudentLeaveList = () => {
   // Filter leaves based on search input
   const filteredLeaves = leaves?.filter(
     (leave) =>
-      leave.leaveType.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      leave.reason.toLowerCase().includes(searchTerm.toLowerCase()),
+      leave.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      leave.reason?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   if (!leaves) {
@@ -202,4 +211,4 @@ const StudentLeaveList = () => {
   );
 };
 
-export default StudentLeaveList;
+export default List;
