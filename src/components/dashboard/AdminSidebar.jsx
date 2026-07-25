@@ -94,7 +94,7 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
           </NavLink>
 
           <NavLink
-            to="/admin-dashboard/leaves"
+            to={`/admin-dashboard/leaves/${user?._id}`}
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
             }

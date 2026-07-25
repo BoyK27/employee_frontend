@@ -13,12 +13,20 @@ const List = () => {
   const { user } = useAuth();
 
   useEffect(() => {
-    if (!user || !user.role) return;
+    // Guard against missing user or invalid/undefined ID
+    if (!user || !user.role || !id || id === "undefined") {
+      return;
+    }
 
     const fetchLeaves = async () => {
       setLoading(true);
       setError(null);
       try {
+        // Use environment variable or API base URL
+        const API_URL =
+          import.meta.env.VITE_API_URL ||
+          "https://ems-backend-hazel.vercel.app";
+
         const response = await axios.get(
           `https://ems-backend-hazel.vercel.app/api/leave/${id}/${user.role}`,
           {
@@ -46,7 +54,7 @@ const List = () => {
     };
 
     fetchLeaves();
-  }, [id, user?._id, user?.role]); // Safe primitive dependencies
+  }, [id, user?._id, user?.role]);
 
   const filterByInput = (e) => {
     const query = e.target.value.toLowerCase();
