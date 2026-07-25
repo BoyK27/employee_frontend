@@ -23,7 +23,7 @@ const Details = () => {
         }
       } catch (error) {
         if (error.response && !error.response.data.success) {
-          alert(error.response.data.error);
+          alert(error.response.data.error || "Error loading details.");
         }
       }
     };
@@ -46,7 +46,7 @@ const Details = () => {
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {
-        alert(error.response.data.error);
+        alert(error.response.data.error || "Failed to update leave status.");
       }
     }
   };
@@ -63,7 +63,10 @@ const Details = () => {
             {/* Image Section */}
             <div className="flex justify-center">
               <img
-                src={leave.employeeId.userId.profileImage}
+                src={
+                  leave?.employeeId?.userId?.profileImage ||
+                  "https://via.placeholder.com/150"
+                }
                 alt="Profile"
                 className="rounded-full border-4 border-teal-500 w-48 h-48 md:w-72 md:h-72 object-cover shadow-md"
               />
@@ -74,26 +77,26 @@ const Details = () => {
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-gray-500 font-bold w-32">Name:</p>
                 <p className="font-medium text-gray-900">
-                  {leave.employeeId.userId.name}
+                  {leave?.employeeId?.userId?.name || "N/A"}
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-gray-500 font-bold w-32">Employee ID:</p>
                 <p className="font-medium text-gray-900">
-                  {leave.employeeId.employeeId}
+                  {leave?.employeeId?.employeeId || "N/A"}
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-gray-500 font-bold w-32">Leave Type:</p>
-                <p className="font-medium text-gray-900">{leave.leaveType}</p>
+                <p className="font-medium text-gray-900">{leave?.leaveType}</p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-gray-500 font-bold w-32">Department:</p>
                 <p className="font-medium text-gray-900">
-                  {leave.employeeId.department.dep_name}
+                  {leave?.employeeId?.department?.dep_name || "N/A"}
                 </p>
               </div>
 

@@ -30,10 +30,10 @@ const Table = () => {
           return {
             _id: leave._id,
             sno: sno++,
-            employeeId: leave.employeeId.employeeId,
-            name: leave.employeeId.userId.name,
+            employeeId: leave.employeeId?.employeeId || "N/A",
+            name: leave.employeeId?.userId?.name || "N/A",
             leaveType: leave.leaveType,
-            department: leave.employeeId.department.dep_name,
+            department: leave.employeeId?.department?.dep_name || "N/A",
             days: dayCount,
             status: leave.status,
             action: <LeaveButtons Id={leave._id} />,
