@@ -11,7 +11,7 @@ const Details = () => {
     const fetchLeave = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/leave/detail/${id}`,
+          `https://ems-backend-hazel.vercel.app/api/leave/detail/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -33,7 +33,7 @@ const Details = () => {
   const changeStatus = async (id, status) => {
     try {
       const response = await axios.put(
-        `http://localhost:5000/api/leave/${id}`,
+        `https://ems-backend-hazel.vercel.app/api/leave/${id}`,
         { status },
         {
           headers: {
@@ -64,9 +64,8 @@ const Details = () => {
             <div className="flex justify-center">
               <img
                 src={
-                  leave.employeeId?.userId?.profileImage
-                    ? `http://localhost:5000/${leave.employeeId.userId.profileImage}`
-                    : "https://via.placeholder.com/150"
+                  leave?.employeeId?.userId?.profileImage ||
+                  "https://via.placeholder.com/150"
                 }
                 alt="Profile"
                 className="rounded-full border-4 border-teal-500 w-40 h-40 md:w-60 md:h-60 object-cover shadow-md"
