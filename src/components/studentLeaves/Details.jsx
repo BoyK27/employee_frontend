@@ -52,7 +52,6 @@ const StudentLeaveDetails = () => {
     }
   };
 
-  // Safely extract student profile details across possible populated Mongoose shapes
   const student = leave?.studentId?.userId || leave?.studentId || {};
   const departmentName =
     leave?.studentId?.department?.dep_name ||
@@ -60,15 +59,15 @@ const StudentLeaveDetails = () => {
     "N/A";
 
   return (
-    <div className="p-4 md:p-10">
+    <div className="p-4 md:p-10 bg-gray-50 min-h-screen">
       {leave ? (
-        <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg border border-gray-100">
-          <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">
+        <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-100">
+          <h2 className="text-2xl font-extrabold mb-8 text-center text-gray-800 border-b pb-4">
             Student Absence Request Details
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {/* Profile Avatar / Image */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            {/* Profile Image */}
             <div className="flex justify-center">
               {student.profileImage ? (
                 <img
@@ -83,18 +82,22 @@ const StudentLeaveDetails = () => {
               )}
             </div>
 
-            {/* Information Grid */}
+            {/* Information List */}
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-36">Student Name:</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-gray-400 font-bold text-xs uppercase w-36">
+                  Student Name:
+                </p>
+                <p className="font-semibold text-gray-800 text-sm">
                   {student.name || "N/A"}
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-36">Matricule / ID:</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-gray-400 font-bold text-xs uppercase w-36">
+                  Matricule / ID:
+                </p>
+                <p className="font-semibold text-gray-800 text-sm">
                   {leave.studentId?.matricule ||
                     leave.studentId?.studentId ||
                     "N/A"}
@@ -102,56 +105,68 @@ const StudentLeaveDetails = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-36">Department:</p>
-                <p className="font-medium text-gray-900">{departmentName}</p>
+                <p className="text-gray-400 font-bold text-xs uppercase w-36">
+                  Department:
+                </p>
+                <p className="font-semibold text-gray-800 text-sm">
+                  {departmentName}
+                </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-36">Reason Category:</p>
-                <p className="font-medium text-gray-900">{leave.leaveType}</p>
+                <p className="text-gray-400 font-bold text-xs uppercase w-36">
+                  Reason Category:
+                </p>
+                <p className="font-semibold text-teal-700 text-sm">
+                  {leave.leaveType}
+                </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-36">Duration:</p>
-                <p className="font-medium text-gray-900">
-                  {new Date(leave.startDate).toLocaleDateString()} -{" "}
+                <p className="text-gray-400 font-bold text-xs uppercase w-36">
+                  Duration:
+                </p>
+                <p className="font-semibold text-gray-800 text-sm">
+                  {new Date(leave.startDate).toLocaleDateString()} —{" "}
                   {new Date(leave.endDate).toLocaleDateString()}
                 </p>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-36">
-                  Details / Reason:
+                <p className="text-gray-400 font-bold text-xs uppercase w-36">
+                  Reason Details:
                 </p>
-                <p className="font-medium text-gray-900">{leave.reason}</p>
+                <p className="font-normal text-gray-700 text-sm italic">
+                  "{leave.reason}"
+                </p>
               </div>
 
-              {/* Action / Status */}
+              {/* Action Buttons / Status Badge */}
               <div className="flex flex-col sm:flex-row sm:space-x-3 pt-4">
-                <p className="text-gray-500 font-bold w-36 mb-2 sm:mb-0">
+                <p className="text-gray-400 font-bold text-xs uppercase w-36 mb-2 sm:mb-0">
                   {leave.status === "Pending" ? "Action:" : "Status:"}
                 </p>
                 {leave.status === "Pending" ? (
-                  <div className="flex space-x-3">
+                  <div className="flex space-x-3 w-full sm:w-auto">
                     <button
                       onClick={() => changeStatus(leave._id, "Approved")}
-                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-md transition-colors"
+                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-2 rounded-xl transition-all shadow-md active:scale-95 text-sm"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => changeStatus(leave._id, "Rejected")}
-                      className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2 rounded-md transition-colors"
+                      className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white font-bold px-6 py-2 rounded-xl transition-all shadow-md active:scale-95 text-sm"
                     >
                       Reject
                     </button>
                   </div>
                 ) : (
                   <span
-                    className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${
+                    className={`inline-block px-3 py-1 rounded-full text-xs font-bold border uppercase ${
                       leave.status === "Approved"
-                        ? "bg-green-100 text-green-700 border border-green-200"
-                        : "bg-red-100 text-red-700 border border-red-200"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : "bg-red-100 text-red-700 border-red-200"
                     }`}
                   >
                     {leave.status}
@@ -163,8 +178,10 @@ const StudentLeaveDetails = () => {
         </div>
       ) : (
         <div className="text-center mt-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600 font-medium">Loading details...</p>
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-teal-600 mx-auto"></div>
+          <p className="mt-4 text-gray-500 font-medium text-sm">
+            Loading details...
+          </p>
         </div>
       )}
     </div>

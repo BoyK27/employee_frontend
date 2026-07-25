@@ -1,12 +1,10 @@
-// src/utils/LeaveHelper.js
-
+import React from "react";
 import { useNavigate } from "react-router-dom";
 
 /* =========================================================
    1. EMPLOYEE LEAVE HELPER
    ========================================================= */
 
-// Columns configuration for Employee Leaves Table
 export const columns = [
   {
     name: "S No",
@@ -50,7 +48,6 @@ export const columns = [
   },
 ];
 
-// View Button for Employee Leaves
 export const LeaveButtons = ({ Id }) => {
   const navigate = useNavigate();
 
@@ -61,7 +58,7 @@ export const LeaveButtons = ({ Id }) => {
   return (
     <button
       onClick={handleView}
-      className="px-4 py-1 bg-teal-500 rounded text-white hover:bg-teal-600 transition-colors"
+      className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
     >
       View
     </button>
@@ -72,7 +69,6 @@ export const LeaveButtons = ({ Id }) => {
    2. STUDENT LEAVE HELPER
    ========================================================= */
 
-// Columns configuration for Student Leaves Table
 export const studentColumns = [
   {
     name: "S No",
@@ -80,24 +76,24 @@ export const studentColumns = [
     width: "70px",
   },
   {
-    name: "Student ID",
-    selector: (row) => row.studentId,
-    width: "120px",
+    name: "Matricule",
+    selector: (row) => row.matricule,
+    width: "130px",
   },
   {
     name: "Student Name",
     selector: (row) => row.name,
-    width: "150px",
+    width: "160px",
   },
   {
-    name: "Reason / Type",
+    name: "Category",
     selector: (row) => row.leaveType,
     width: "140px",
   },
   {
-    name: "Department / Class",
+    name: "Department",
     selector: (row) => row.department,
-    width: "160px",
+    width: "150px",
   },
   {
     name: "Days",
@@ -116,7 +112,6 @@ export const studentColumns = [
   },
 ];
 
-// View Button for Student Leaves
 export const StudentLeaveButtons = ({ Id }) => {
   const navigate = useNavigate();
 
@@ -127,7 +122,7 @@ export const StudentLeaveButtons = ({ Id }) => {
   return (
     <button
       onClick={handleView}
-      className="px-4 py-1 bg-indigo-600 rounded text-white hover:bg-indigo-700 transition-colors"
+      className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
     >
       View
     </button>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import DataTable from "react-data-table-component";
-import { columns, LeaveButtons } from "../../utils/LeaveHelper";
+import { studentColumns, StudentLeaveButtons } from "../../utils/LeaveHelper";
 import axios from "axios";
 
 const StudentLeaveTable = () => {
@@ -27,7 +27,6 @@ const StudentLeaveTable = () => {
           const timeDiff = endDate.getTime() - startDate.getTime();
           const dayCount = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
 
-          // Extract dynamic student fields with safe defaults
           const studentInfo = leave.studentId?.userId || leave.studentId || {};
           const matricule =
             leave.studentId?.matricule || leave.studentId?.studentId || "N/A";
@@ -45,7 +44,7 @@ const StudentLeaveTable = () => {
             department: departmentName,
             days: dayCount,
             status: leave.status,
-            action: <LeaveButtons Id={leave._id} />,
+            action: <StudentLeaveButtons Id={leave._id} />,
           };
         });
 
@@ -97,10 +96,10 @@ const StudentLeaveTable = () => {
   const customStyles = {
     headCells: {
       style: {
-        backgroundColor: "#f3f4f6",
+        backgroundColor: "#f9fafb",
         color: "#374151",
         fontWeight: "bold",
-        fontSize: "14px",
+        fontSize: "13px",
       },
     },
   };
@@ -114,7 +113,7 @@ const StudentLeaveTable = () => {
               Manage Student Absence Requests
             </h3>
             <p className="text-gray-500 text-sm mt-1">
-              Review, approve, or reject student leave and permission requests
+              Review, approve, or reject student leave requests
             </p>
           </div>
 
@@ -125,7 +124,7 @@ const StudentLeaveTable = () => {
                 <input
                   type="text"
                   placeholder="Search by Matricule or Name..."
-                  className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
+                  className="w-full pl-4 pr-10 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
                   onChange={filterByInput}
                 />
               </div>
@@ -135,14 +134,14 @@ const StudentLeaveTable = () => {
                   <button
                     key={status}
                     onClick={() => filterByButton(status)}
-                    className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-bold hover:border-teal-500 hover:text-teal-600 rounded-lg transition-all active:scale-95"
+                    className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-xs font-bold hover:border-teal-500 hover:text-teal-600 rounded-lg transition-all active:scale-95"
                   >
                     {status}
                   </button>
                 ))}
                 <button
                   onClick={() => setFilteredLeaves(leaves)}
-                  className="px-4 py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900 transition-all active:scale-95"
+                  className="px-4 py-2 bg-gray-800 text-white text-xs font-bold rounded-lg hover:bg-gray-900 transition-all active:scale-95"
                 >
                   All
                 </button>
@@ -159,15 +158,15 @@ const StudentLeaveTable = () => {
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h4 className="font-bold text-gray-800 text-lg">
+                    <h4 className="font-bold text-gray-800 text-base">
                       {leave.name}
                     </h4>
-                    <p className="text-xs font-bold text-teal-600 uppercase tracking-widest">
+                    <p className="text-xs font-bold text-teal-600 uppercase tracking-widest mt-0.5">
                       {leave.matricule}
                     </p>
                   </div>
                   <span
-                    className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase ${getStatusStyle(
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full border uppercase ${getStatusStyle(
                       leave.status,
                     )}`}
                   >
@@ -195,15 +194,13 @@ const StudentLeaveTable = () => {
                 </div>
 
                 <div className="mb-4">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase ml-1">
+                  <p className="text-[10px] text-gray-400 font-bold uppercase">
                     Department
                   </p>
-                  <p className="text-sm text-gray-600 ml-1">
-                    {leave.department}
-                  </p>
+                  <p className="text-sm text-gray-600">{leave.department}</p>
                 </div>
 
-                <div className="border-t pt-4 flex justify-around">
+                <div className="border-t pt-4 flex justify-end">
                   {leave.action}
                 </div>
               </div>
@@ -213,7 +210,7 @@ const StudentLeaveTable = () => {
           {/* --- DESKTOP VIEW (Table) --- */}
           <div className="hidden md:block bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
             <DataTable
-              columns={columns}
+              columns={studentColumns}
               data={filteredLeaves}
               pagination
               customStyles={customStyles}
@@ -232,8 +229,8 @@ const StudentLeaveTable = () => {
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
-          <p className="text-gray-500 font-medium">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-teal-600"></div>
+          <p className="text-gray-500 font-medium text-sm">
             Loading student records...
           </p>
         </div>

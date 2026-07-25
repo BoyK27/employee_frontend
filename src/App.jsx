@@ -37,6 +37,7 @@ import LeaveDetail from "./components/leaves/Details";
 import StudentLeaveList from "./components/studentLeaves/List";
 import AddStudentLeave from "./components/studentLeaves/Add";
 import StudentLeaveDetails from "./components/studentLeaves/Details";
+import StudentLeaveTable from "./components/studentLeaves/Table";
 
 // Salary Components
 import AddSalary from "./components/salary/Add";
