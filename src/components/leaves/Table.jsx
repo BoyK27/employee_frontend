@@ -32,10 +32,10 @@ const Table = () => {
             sno: sno++,
             employeeId: leave.employeeId?.employeeId || "N/A",
             name: leave.employeeId?.userId?.name || "N/A",
-            leaveType: leave.leaveType,
+            leaveType: leave.leaveType || "N/A",
             department: leave.employeeId?.department?.dep_name || "N/A",
-            days: dayCount,
-            status: leave.status,
+            days: isNaN(dayCount) ? 0 : dayCount,
+            status: leave.status || "Pending",
             action: <LeaveButtons Id={leave._id} />,
           };
         });
@@ -46,7 +46,7 @@ const Table = () => {
     } catch (error) {
       console.error("An error occurred:", error);
       if (error.response && !error.response.data.success) {
-        alert(error.response.data.error);
+        alert(error.response.data.error || "Failed to fetch leaves");
       } else {
         alert("An unexpected error occurred.");
       }
@@ -58,21 +58,24 @@ const Table = () => {
   }, []);
 
   const filterByInput = (e) => {
-    const data = leaves.filter((leave) =>
-      leave.employeeId.toLowerCase().includes(e.target.value.toLowerCase()),
+    const query = e.target.value.toLowerCase();
+    const data = leaves.filter(
+      (leave) =>
+        (leave.employeeId || "").toLowerCase().includes(query) ||
+        (leave.name || "").toLowerCase().includes(query),
     );
     setFilteredLeaves(data);
   };
 
   const filterByButton = (status) => {
-    const data = leaves.filter((leave) =>
-      leave.status.toLowerCase().includes(status.toLowerCase()),
+    const data = leaves.filter(
+      (leave) => (leave.status || "").toLowerCase() === status.toLowerCase(),
     );
     setFilteredLeaves(data);
   };
 
   const getStatusStyle = (status) => {
-    switch (status.toLowerCase()) {
+    switch ((status || "").toLowerCase()) {
       case "approved":
         return "bg-green-100 text-green-700 border-green-200";
       case "rejected":
@@ -112,7 +115,7 @@ const Table = () => {
               <div className="relative w-full md:w-80">
                 <input
                   type="text"
-                  placeholder="Search By Emp ID..."
+                  placeholder="Search By Emp ID or Name..."
                   className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   onChange={filterByInput}
                 />
@@ -155,7 +158,9 @@ const Table = () => {
                     </p>
                   </div>
                   <span
-                    className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase ${getStatusStyle(leave.status)}`}
+                    className={`text-[10px] font-bold px-2 py-1 rounded-md border uppercase ${getStatusStyle(
+                      leave.status,
+                    )}`}
                   >
                     {leave.status}
                   </span>
@@ -190,7 +195,7 @@ const Table = () => {
                 </div>
 
                 <div className="border-t pt-4 flex justify-around">
-                  {leave.action}
+                  <LeaveButtons Id={leave._id} />
                 </div>
               </div>
             ))}
