@@ -95,7 +95,7 @@ function App() {
           <Route path="leaves/:id" element={<LeaveDetail />} />
 
           {/* Student Leaves */}
-          <Route path="student-leaves" element={<StudentLeaveList />} />
+          <Route path="student-leaves" element={<StudentLeaveTable />} />
           <Route path="student-leaves/:id" element={<StudentLeaveDetails />} />
 
           {/* Employee Salary */}
