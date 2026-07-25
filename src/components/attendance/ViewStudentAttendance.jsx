@@ -1,18 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../../context/authContext";
 
 const ViewStudentAttendance = () => {
   const { id } = useParams();
+  const { user } = useAuth();
   const [attendance, setAttendance] = useState([]);
   const [filteredAttendance, setFilteredAttendance] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Validate parameter ID; if invalid, fallback to current user's ID
+  const effectiveId =
+    id && id !== "student-attendance" && id !== "undefined"
+      ? id
+      : user?._id || user?.id;
+
   useEffect(() => {
     const fetchAttendance = async () => {
+      if (!effectiveId) {
+        setLoading(false);
+        return;
+      }
+
       try {
+        setLoading(true);
         const response = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/student-attendance/${id}`,
+          `https://ems-backend-hazel.vercel.app/api/student-attendance/${effectiveId}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -21,7 +35,7 @@ const ViewStudentAttendance = () => {
         );
 
         if (response.data.success) {
-          // Fix: Backend returns 'records' instead of 'attendance'
+          // Handle both 'records' and 'attendance' array structures
           const records =
             response.data.records || response.data.attendance || [];
           setAttendance(records);
@@ -38,7 +52,7 @@ const ViewStudentAttendance = () => {
     };
 
     fetchAttendance();
-  }, [id]);
+  }, [effectiveId]);
 
   const filterByStatus = (status) => {
     if (!attendance) return;
@@ -66,7 +80,7 @@ const ViewStudentAttendance = () => {
     }
   };
 
-  // Compute total counts dynamically with safe lowercased comparisons
+  // Compute total counts dynamically with case-insensitive checks
   const stats = {
     total: attendance?.length || 0,
     present:

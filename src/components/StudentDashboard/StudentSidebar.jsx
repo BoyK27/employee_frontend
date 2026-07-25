@@ -114,7 +114,7 @@ const StudentSidebar = ({ isOpen, toggleSidebar }) => {
 
           {/* Attendance Report */}
           <NavLink
-            to={`/student-dashboard/attendance/${user?._id}`}
+            to={`/student-dashboard/attendance/${user?._id || user?.id}`}
             className={({ isActive }) =>
               `${isActive ? "bg-teal-500" : "hover:bg-gray-700"} flex items-center space-x-4 py-2.5 px-4 rounded transition-colors`
             }
