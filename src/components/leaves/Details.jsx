@@ -11,7 +11,7 @@ const Details = () => {
     const fetchLeave = async () => {
       try {
         const response = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/leave/detail/${id}`,
+          `http://localhost:5000/api/leave/detail/${id}`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -23,7 +23,7 @@ const Details = () => {
         }
       } catch (error) {
         if (error.response && !error.response.data.success) {
-          alert(error.response.data.error || "Error loading details.");
+          alert(error.response.data.error || "Failed to load leave details.");
         }
       }
     };
@@ -33,7 +33,7 @@ const Details = () => {
   const changeStatus = async (id, status) => {
     try {
       const response = await axios.put(
-        `https://ems-backend-hazel.vercel.app/api/leave/${id}`,
+        `http://localhost:5000/api/leave/${id}`,
         { status },
         {
           headers: {
@@ -46,98 +46,114 @@ const Details = () => {
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {
-        alert(error.response.data.error || "Failed to update leave status.");
+        alert(error.response.data.error || "Status update failed.");
       }
     }
   };
 
   return (
-    <div className="p-4 md:p-10">
+    <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen">
       {leave ? (
-        <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-lg shadow-lg">
-          <h2 className="text-2xl font-bold mb-8 text-center text-gray-800">
-            Leave Details
+        <div className="max-w-4xl mx-auto bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+          <h2 className="text-2xl font-extrabold mb-8 text-center text-gray-800">
+            Leave Request Details
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {/* Image Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+            {/* Profile Image Section */}
             <div className="flex justify-center">
               <img
                 src={
-                  leave?.employeeId?.userId?.profileImage ||
-                  "https://via.placeholder.com/150"
+                  leave.employeeId?.userId?.profileImage
+                    ? `http://localhost:5000/${leave.employeeId.userId.profileImage}`
+                    : "https://via.placeholder.com/150"
                 }
                 alt="Profile"
-                className="rounded-full border-4 border-teal-500 w-48 h-48 md:w-72 md:h-72 object-cover shadow-md"
+                className="rounded-full border-4 border-teal-500 w-40 h-40 md:w-60 md:h-60 object-cover shadow-md"
               />
             </div>
 
-            {/* Information Section */}
-            <div className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-32">Name:</p>
-                <p className="font-medium text-gray-900">
-                  {leave?.employeeId?.userId?.name || "N/A"}
-                </p>
+            {/* Information Grid */}
+            <div className="space-y-3">
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">Name:</span>
+                <span className="font-semibold text-gray-800">
+                  {leave.employeeId?.userId?.name || "N/A"}
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-32">Employee ID:</p>
-                <p className="font-medium text-gray-900">
-                  {leave?.employeeId?.employeeId || "N/A"}
-                </p>
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">ID:</span>
+                <span className="font-semibold text-gray-800">
+                  {leave.employeeId?.employeeId || "N/A"}
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-32">Leave Type:</p>
-                <p className="font-medium text-gray-900">{leave?.leaveType}</p>
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">
+                  Leave Type:
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {leave.leaveType}
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-32">Department:</p>
-                <p className="font-medium text-gray-900">
-                  {leave?.employeeId?.department?.dep_name || "N/A"}
-                </p>
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">Gender:</span>
+                <span className="font-semibold text-gray-800">
+                  {leave.employeeId?.gender || "N/A"}
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-32">Duration:</p>
-                <p className="font-medium text-gray-900">
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">
+                  Department:
+                </span>
+                <span className="font-semibold text-gray-800">
+                  {leave.employeeId?.department?.dep_name || "N/A"}
+                </span>
+              </div>
+
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">Duration:</span>
+                <span className="font-semibold text-gray-800">
                   {new Date(leave.startDate).toLocaleDateString()} -{" "}
                   {new Date(leave.endDate).toLocaleDateString()}
-                </p>
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
-                <p className="text-gray-500 font-bold w-32">Reason:</p>
-                <p className="font-medium text-gray-900">{leave.reason}</p>
+              <div className="flex border-b pb-2">
+                <span className="font-bold w-32 text-gray-600">Reason:</span>
+                <span className="font-semibold text-gray-800">
+                  {leave.reason}
+                </span>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:space-x-3 pt-4">
-                <p className="text-gray-500 font-bold w-32 mb-2 sm:mb-0">
+              <div className="flex items-center pt-3">
+                <span className="font-bold w-32 text-gray-600">
                   {leave.status === "Pending" ? "Action:" : "Status:"}
-                </p>
+                </span>
                 {leave.status === "Pending" ? (
                   <div className="flex space-x-3">
                     <button
                       onClick={() => changeStatus(leave._id, "Approved")}
-                      className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md transition-colors"
+                      className="bg-green-600 hover:bg-green-700 text-white font-bold px-5 py-2 rounded-lg transition-all active:scale-95 shadow"
                     >
                       Approve
                     </button>
                     <button
                       onClick={() => changeStatus(leave._id, "Rejected")}
-                      className="flex-1 sm:flex-none bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition-colors"
+                      className="bg-red-600 hover:bg-red-700 text-white font-bold px-5 py-2 rounded-lg transition-all active:scale-95 shadow"
                     >
                       Reject
                     </button>
                   </div>
                 ) : (
                   <span
-                    className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    className={`px-3 py-1 rounded-full text-sm font-bold uppercase border ${
                       leave.status === "Approved"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        ? "bg-green-100 text-green-700 border-green-200"
+                        : "bg-red-100 text-red-700 border-red-200"
                     }`}
                   >
                     {leave.status}
@@ -148,9 +164,9 @@ const Details = () => {
           </div>
         </div>
       ) : (
-        <div className="text-center mt-20">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading details...</p>
+        <div className="flex flex-col items-center justify-center h-[60vh]">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+          <p className="mt-4 text-gray-500 font-medium">Loading details...</p>
         </div>
       )}
     </div>

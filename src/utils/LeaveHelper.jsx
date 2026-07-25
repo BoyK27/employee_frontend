@@ -48,17 +48,12 @@ export const columns = [
   },
 ];
 
-export const LeaveButtons = ({ Id, _id }) => {
+export const LeaveButtons = ({ Id }) => {
   const navigate = useNavigate();
-  // Support both uppercase 'Id' and lowercase '_id' props
-  const leaveId = Id || _id;
 
   const handleView = () => {
-    if (!leaveId) {
-      console.error("LeaveButtons: Missing leave ID!");
-      return;
-    }
-    navigate(`/admin-dashboard/leaves/${leaveId}`);
+    if (!Id) return;
+    navigate(`/admin-dashboard/leaves/${Id}`);
   };
 
   return (
@@ -118,16 +113,12 @@ export const studentColumns = [
   },
 ];
 
-export const StudentLeaveButtons = ({ Id, _id }) => {
+export const StudentLeaveButtons = ({ Id }) => {
   const navigate = useNavigate();
-  const leaveId = Id || _id;
 
   const handleView = () => {
-    if (!leaveId) {
-      console.error("StudentLeaveButtons: Missing leave ID!");
-      return;
-    }
-    navigate(`/admin-dashboard/student-leaves/${leaveId}`);
+    if (!Id) return;
+    navigate(`/admin-dashboard/student-leaves/${Id}`);
   };
 
   return (

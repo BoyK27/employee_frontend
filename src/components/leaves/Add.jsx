@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 const Add = () => {
   const { user } = useAuth();
   const [leave, setLeave] = React.useState({
-    userId: user._id,
+    userId: user?._id || "",
   });
 
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ const Add = () => {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/leave/add",
+        "http://localhost:5000/api/leave/add",
         leave,
         {
           headers: {
@@ -28,30 +28,33 @@ const Add = () => {
           },
         },
       );
-      console.log(response.data);
       if (response.data.success) {
         navigate(`/employee-dashboard/leaves/${user._id}`);
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {
-        alert(error.message);
+        alert(error.response.data.error || "Failed to add leave request.");
+      } else {
+        alert("An unexpected error occurred.");
       }
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto mt-10 bg-white p-8 rounded-md shadow-md">
-      <h2 className="text-2xl font-bold mb-6">Request for Leave</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="flex flex-col space-y-4">
+    <div className="p-4 sm:p-6 md:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-2xl bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
+        <h2 className="text-2xl font-extrabold text-gray-800 mb-6 text-center">
+          Request for Leave
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
               Leave Type
             </label>
             <select
               name="leaveType"
               onChange={handleChange}
-              className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
               required
             >
               <option value="">Select Leave Type</option>
@@ -61,56 +64,56 @@ const Add = () => {
             </select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/*From Date*/}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                From: Date
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                From Date
               </label>
               <input
                 type="date"
-                className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
                 name="startDate"
                 onChange={handleChange}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
                 required
               />
             </div>
 
-            {/*To date*/}
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                To: Date
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                To Date
               </label>
               <input
                 type="date"
-                className="mt-1 p-2 block w-full border border-gray-300 rounded-md"
                 name="endDate"
                 onChange={handleChange}
+                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
                 required
               />
             </div>
           </div>
 
-          {/*Description*/}
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Description
+            <label className="block text-sm font-semibold text-gray-700 mb-1">
+              Description / Reason
             </label>
             <textarea
               name="reason"
-              placeholder="Reason"
+              placeholder="Provide reason for leave..."
               onChange={handleChange}
-              className="w-full border border-gray-300"
+              rows="4"
+              className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
+              required
             ></textarea>
           </div>
-        </div>
-        <button
-          type="submit"
-          className="w-full mt-6 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-md"
-        >
-          Add Leave
-        </button>
-      </form>
+
+          <button
+            type="submit"
+            className="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 mt-4"
+          >
+            Submit Leave Request
+          </button>
+        </form>
+      </div>
     </div>
   );
 };
