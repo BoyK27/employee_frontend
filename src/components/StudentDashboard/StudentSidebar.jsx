@@ -86,8 +86,7 @@ const StudentSidebar = ({ isOpen, toggleSidebar }) => {
           </NavLink> 
           */}
 
-          {/* Commented Out: Grades & Results */}
-          {/* 
+          {/* Active: Grades & Results */}
           <NavLink
             to={`/student-dashboard/results/${user?._id}`}
             className={({ isActive }) =>
@@ -97,8 +96,7 @@ const StudentSidebar = ({ isOpen, toggleSidebar }) => {
           >
             <FaFileAlt className="text-lg" />
             <span>Grades & Results</span>
-          </NavLink> 
-          */}
+          </NavLink>
 
           {/* Leave Request */}
           <NavLink

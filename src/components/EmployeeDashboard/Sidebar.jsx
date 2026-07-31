@@ -6,6 +6,7 @@ import {
   FaCogs,
   FaTachometerAlt,
   FaUsers,
+  FaEdit,
 } from "react-icons/fa";
 import { useAuth } from "../../context/authContext";
 
@@ -36,7 +37,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <NavLink
             to="/employee-dashboard"
             className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : ""}flex items-center space-x-4 py-2.5 px-4 rounded`
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "}flex items-center space-x-4 py-2.5 px-4 rounded`
             }
             end
             onClick={() => window.innerWidth < 1024 && toggleSidebar()}
@@ -48,7 +49,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <NavLink
             to={`/employee-dashboard/profile/${user._id}`}
             className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : ""}flex items-center space-x-4 py-2.5 px-4 rounded`
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "}flex items-center space-x-4 py-2.5 px-4 rounded`
             }
             onClick={() => window.innerWidth < 1024 && toggleSidebar()}
           >
@@ -56,10 +57,22 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
             <span>My Profile</span>
           </NavLink>
 
+          {/* Lecturer Marks Entry Portal */}
+          <NavLink
+            to="/employee-dashboard/marks-entry"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "}flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={() => window.innerWidth < 1024 && toggleSidebar()}
+          >
+            <FaEdit />
+            <span>Marks Entry</span>
+          </NavLink>
+
           <NavLink
             to={`/employee-dashboard/leaves/${user._id}`}
             className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : ""}flex items-center space-x-4 py-2.5 px-4 rounded`
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "}flex items-center space-x-4 py-2.5 px-4 rounded`
             }
             onClick={() => window.innerWidth < 1024 && toggleSidebar()}
           >
@@ -70,7 +83,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <NavLink
             to={`/employee-dashboard/salary/${user._id}`}
             className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : ""}flex items-center space-x-4 py-2.5 px-4 rounded`
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "}flex items-center space-x-4 py-2.5 px-4 rounded`
             }
             onClick={() => window.innerWidth < 1024 && toggleSidebar()}
           >
@@ -81,7 +94,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
           <NavLink
             to="/employee-dashboard/setting"
             className={({ isActive }) =>
-              `${isActive ? "bg-teal-500 " : ""}flex items-center space-x-4 py-2.5 px-4 rounded`
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "}flex items-center space-x-4 py-2.5 px-4 rounded`
             }
             onClick={() => window.innerWidth < 1024 && toggleSidebar()}
           >

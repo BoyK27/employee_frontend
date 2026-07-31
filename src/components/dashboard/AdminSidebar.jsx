@@ -10,8 +10,10 @@ import {
   FaTachometerAlt,
   FaUsers,
   FaTimes,
-  FaUserGraduation,
   FaClipboardList,
+  FaBook,
+  FaBookmark,
+  FaCalendarCheck,
 } from "react-icons/fa";
 import { AiOutlineFileText } from "react-icons/ai";
 
@@ -77,8 +79,46 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
             <span>Departments</span>
           </NavLink>
 
+          {/* --- ACADEMIC MANAGEMENT --- */}
+          <div className="pt-3 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+            Academic Management
+          </div>
+
+          <NavLink
+            to="/admin-dashboard/classes"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaBook />
+            <span>Classes</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin-dashboard/subjects"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaBookmark />
+            <span>Subjects</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin-dashboard/exam-sessions"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaCalendarCheck />
+            <span>Exam Sessions</span>
+          </NavLink>
+
           {/* --- EMPLOYEE SECTION --- */}
-          <div className="pt-2 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <div className="pt-3 pb-1 px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">
             Employee Management
           </div>
 

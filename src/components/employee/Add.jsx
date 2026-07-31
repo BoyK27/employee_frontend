@@ -2,22 +2,53 @@ import { fetchDepartments } from "../../utils/EmployeeHelper";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-// Optional: If you use Lucide icons
 import { Eye, EyeOff } from "lucide-react";
 
 const Add = () => {
   const [departments, setDepartments] = useState([]);
+  const [classesList, setClassesList] = useState([]);
+  const [subjectsList, setSubjectsList] = useState([]);
+
   const [formData, setFormData] = useState({});
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
+
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // State for eye icon
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getDepartments = async () => {
-      const deps = await fetchDepartments();
-      setDepartments(deps);
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // Fetch Departments
+        const deps = await fetchDepartments();
+        setDepartments(deps || []);
+
+        // Fetch Classes
+        const classRes = await axios.get(
+          "https://ems-backend-hazel.vercel.app/api/class",
+          { headers },
+        );
+        if (classRes.data.success) {
+          setClassesList(classRes.data.classes);
+        }
+
+        // Fetch Subjects
+        const subjectRes = await axios.get(
+          "https://ems-backend-hazel.vercel.app/api/subject",
+          { headers },
+        );
+        if (subjectRes.data.success) {
+          setSubjectsList(subjectRes.data.subjects);
+        }
+      } catch (error) {
+        console.error("Error fetching form metadata:", error);
+      }
     };
-    getDepartments();
+    fetchData();
   }, []);
 
   const handleChange = (e) => {
@@ -29,6 +60,23 @@ const Add = () => {
     }
   };
 
+  // Multi-select handlers for classes and subjects
+  const handleClassToggle = (classId) => {
+    setSelectedClasses((prev) =>
+      prev.includes(classId)
+        ? prev.filter((id) => id !== classId)
+        : [...prev, classId],
+    );
+  };
+
+  const handleSubjectToggle = (subjectId) => {
+    setSelectedSubjects((prev) =>
+      prev.includes(subjectId)
+        ? prev.filter((id) => id !== subjectId)
+        : [...prev, subjectId],
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -37,6 +85,10 @@ const Add = () => {
     Object.keys(formData).forEach((key) => {
       formDataObj.append(key, formData[key]);
     });
+
+    // Append multi-select arrays as JSON strings for multipart parsing
+    formDataObj.append("classes", JSON.stringify(selectedClasses));
+    formDataObj.append("subjects", JSON.stringify(selectedSubjects));
 
     try {
       const response = await axios.post(
@@ -127,7 +179,7 @@ const Add = () => {
             name="designation"
             type="text"
             onChange={handleChange}
-            placeholder="e.g. Developer"
+            placeholder="e.g. Lecturer"
             required
           />
 
@@ -159,7 +211,7 @@ const Add = () => {
             <FormInput
               label="Password"
               name="password"
-              type={showPassword ? "text" : "password"} // Dynamic type
+              type={showPassword ? "text" : "password"}
               onChange={handleChange}
               placeholder="*******"
               required
@@ -191,6 +243,56 @@ const Add = () => {
               className="mt-1 p-2 block w-full border border-gray-300 rounded-lg bg-gray-50 file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100"
               required
             />
+          </div>
+
+          {/* ASSIGN CLASSES */}
+          <div className="col-span-1 md:col-span-2 border-t pt-4 mt-2">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Assign Classes
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-gray-50">
+              {classesList.map((cls) => (
+                <label
+                  key={cls._id}
+                  className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedClasses.includes(cls._id)}
+                    onChange={() => handleClassToggle(cls._id)}
+                    className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
+                  />
+                  <span>
+                    {cls.className} ({cls.code})
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* ASSIGN SUBJECTS */}
+          <div className="col-span-1 md:col-span-2 border-t pt-4">
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Assign Subjects
+            </label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 border border-gray-200 rounded-lg bg-gray-50">
+              {subjectsList.map((subj) => (
+                <label
+                  key={subj._id}
+                  className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedSubjects.includes(subj._id)}
+                    onChange={() => handleSubjectToggle(subj._id)}
+                    className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
+                  />
+                  <span>
+                    {subj.subjectName} ({subj.subjectCode})
+                  </span>
+                </label>
+              ))}
+            </div>
           </div>
         </div>
 

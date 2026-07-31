@@ -1,30 +1,54 @@
 import { fetchDepartments } from "../../utils/EmployeeHelper";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
 const Edit = () => {
-  const [employee, setEmployee] = React.useState({
+  const [employee, setEmployee] = useState({
     name: "",
     maritalStatus: "",
     designation: "",
     salary: 0,
-    departments: "", // Preserved typo
+    department: "",
   });
-  const [departments, setDepartments] = React.useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [classesList, setClassesList] = useState([]);
+  const [subjectsList, setSubjectsList] = useState([]);
+
+  const [selectedClasses, setSelectedClasses] = useState([]);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
 
   const navigate = useNavigate();
   const { id } = useParams();
 
-  React.useEffect(() => {
-    const getDepartments = async () => {
-      const departments = await fetchDepartments();
-      setDepartments(departments);
+  useEffect(() => {
+    const fetchMetadata = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const deps = await fetchDepartments();
+        setDepartments(deps || []);
+
+        const classRes = await axios.get(
+          "https://ems-backend-hazel.vercel.app/api/class",
+          { headers },
+        );
+        if (classRes.data.success) setClassesList(classRes.data.classes);
+
+        const subjectRes = await axios.get(
+          "https://ems-backend-hazel.vercel.app/api/subject",
+          { headers },
+        );
+        if (subjectRes.data.success) setSubjectsList(subjectRes.data.subjects);
+      } catch (error) {
+        console.error("Error fetching metadata:", error);
+      }
     };
-    getDepartments();
+    fetchMetadata();
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchEmployee = async () => {
       try {
         const response = await axios.get(
@@ -36,15 +60,30 @@ const Edit = () => {
           },
         );
         if (response.data.success) {
-          const employee = response.data.employee;
-          setEmployee((prev) => ({
-            ...prev,
-            name: employee.userId.name,
-            maritalStatus: employee.maritalStatus,
-            designation: employee.designation,
-            salary: employee.salary,
-            department: employee.department,
-          }));
+          const emp = response.data.employee;
+          setEmployee({
+            name: emp.userId?.name || "",
+            maritalStatus: emp.maritalStatus || "",
+            designation: emp.designation || "",
+            salary: emp.salary || 0,
+            department: emp.department?._id || emp.department || "",
+          });
+
+          // Pre-populate assigned classes and subjects
+          if (emp.classes) {
+            setSelectedClasses(
+              emp.classes.map((cls) =>
+                typeof cls === "object" ? cls._id : cls,
+              ),
+            );
+          }
+          if (emp.subjects) {
+            setSelectedSubjects(
+              emp.subjects.map((sbj) =>
+                typeof sbj === "object" ? sbj._id : sbj,
+              ),
+            );
+          }
         }
       } catch (error) {
         if (error.response && !error.response.data.success) {
@@ -53,21 +92,42 @@ const Edit = () => {
       }
     };
     fetchEmployee();
-  }, []);
+  }, [id]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setEmployee((preData) => ({ ...preData, [name]: value }));
+  };
+
+  const handleClassToggle = (classId) => {
+    setSelectedClasses((prev) =>
+      prev.includes(classId)
+        ? prev.filter((id) => id !== classId)
+        : [...prev, classId],
+    );
+  };
+
+  const handleSubjectToggle = (subjectId) => {
+    setSelectedSubjects((prev) =>
+      prev.includes(subjectId)
+        ? prev.filter((id) => id !== subjectId)
+        : [...prev, subjectId],
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const payload = {
+      ...employee,
+      classes: selectedClasses,
+      subjects: selectedSubjects,
+    };
+
     try {
       const response = await axios.put(
         `https://ems-backend-hazel.vercel.app/api/employee/${id}`,
-        employee,
+        payload,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -81,7 +141,7 @@ const Edit = () => {
       if (error.response && !error.response.data.success) {
         alert(error.response.data.error);
       } else {
-        alert("Something Went wrong. Please try again");
+        alert("Something went wrong. Please try again");
       }
     }
   };
@@ -89,20 +149,19 @@ const Edit = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex items-start justify-center p-0 md:p-4">
       {departments && employee ? (
-        <div className="w-full max-w-2xl bg-white shadow-none md:shadow-lg md:rounded-lg overflow-hidden">
-          {/* Mobile-Friendly Header */}
+        <div className="w-full max-w-2xl bg-white shadow-none md:shadow-lg md:rounded-lg overflow-hidden my-6">
           <div className="bg-teal-600 p-6 text-white text-center md:text-left">
             <h2 className="text-xl md:text-2xl font-bold">
               Edit Employee Details
             </h2>
             <p className="text-teal-100 text-sm">
-              Update the information below
+              Update assigned classes and subjects below
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/*Name*/}
+              {/* Name */}
               <div className="flex flex-col">
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Name
@@ -118,7 +177,7 @@ const Edit = () => {
                 />
               </div>
 
-              {/*Marital Status*/}
+              {/* Marital Status */}
               <div className="flex flex-col">
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Marital Status
@@ -131,12 +190,12 @@ const Edit = () => {
                   required
                 >
                   <option value="">Select Status</option>
-                  <option value="maried">Maried</option>
+                  <option value="married">Married</option>
                   <option value="single">Single</option>
                 </select>
               </div>
 
-              {/*Designation*/}
+              {/* Designation */}
               <div className="flex flex-col">
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Designation
@@ -152,7 +211,7 @@ const Edit = () => {
                 />
               </div>
 
-              {/*Salary*/}
+              {/* Salary */}
               <div className="flex flex-col">
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Salary
@@ -168,7 +227,7 @@ const Edit = () => {
                 />
               </div>
 
-              {/*Department*/}
+              {/* Department */}
               <div className="col-span-1 md:col-span-2 flex flex-col">
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
                   Department
@@ -188,9 +247,58 @@ const Edit = () => {
                   ))}
                 </select>
               </div>
+
+              {/* ASSIGN CLASSES */}
+              <div className="col-span-1 md:col-span-2 border-t pt-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">
+                  Assigned Classes
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-gray-50">
+                  {classesList.map((cls) => (
+                    <label
+                      key={cls._id}
+                      className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedClasses.includes(cls._id)}
+                        onChange={() => handleClassToggle(cls._id)}
+                        className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
+                      />
+                      <span>
+                        {cls.className} ({cls.code})
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {/* ASSIGN SUBJECTS */}
+              <div className="col-span-1 md:col-span-2 border-t pt-4">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2 ml-1">
+                  Assigned Subjects
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-36 overflow-y-auto p-2 border border-gray-300 rounded-lg bg-gray-50">
+                  {subjectsList.map((subj) => (
+                    <label
+                      key={subj._id}
+                      className="flex items-center space-x-2 text-sm text-gray-700 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSubjects.includes(subj._id)}
+                        onChange={() => handleSubjectToggle(subj._id)}
+                        className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
+                      />
+                      <span>
+                        {subj.subjectName} ({subj.subjectCode})
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
-            {/* Submit Button - Full width on mobile */}
             <div className="pt-4">
               <button
                 type="submit"

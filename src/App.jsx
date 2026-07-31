@@ -16,6 +16,13 @@ import DepartmentList from "./components/departments/DepartmentList";
 import AddDepartment from "./components/departments/AddDepartment";
 import EditDepartment from "./components/departments/EditDepartment";
 
+// Academic & Examination Components (NEW)
+import Classes from "./components/admin/Classes";
+import Subjects from "./components/admin/Subjects";
+import ExamSessions from "./components/admin/ExamSessions";
+import MarksEntry from "./components/employee/MarksEntry";
+import MarksView from "./components/student/MarksView";
+
 // Employee Components
 import EmployeeList from "./components/employee/List";
 import AddEmployee from "./components/employee/Add";
@@ -79,6 +86,11 @@ function App() {
           <Route path="add-department" element={<AddDepartment />} />
           <Route path="department/:id" element={<EditDepartment />} />
 
+          {/* Academic Management (NEW) */}
+          <Route path="classes" element={<Classes />} />
+          <Route path="subjects" element={<Subjects />} />
+          <Route path="exam-sessions" element={<ExamSessions />} />
+
           {/* Employee Management */}
           <Route path="employees" element={<EmployeeList />} />
           <Route path="add-employee" element={<AddEmployee />} />
@@ -130,6 +142,10 @@ function App() {
           }
         >
           <Route path="profile/:id" element={<ViewEmployee />} />
+
+          {/* Marks Entry Spreadsheet (NEW) */}
+          <Route path="marks-entry" element={<MarksEntry />} />
+
           <Route path="leaves/:id" element={<LeaveList />} />
           <Route path="add-leave" element={<AddLeave />} />
           <Route path="salary/:id" element={<ViewSalary />} />
@@ -148,6 +164,10 @@ function App() {
           }
         >
           <Route path="profile/:id" element={<ViewStudent />} />
+
+          {/* Grades & Report Card (NEW) */}
+          <Route path="results/:id" element={<MarksView />} />
+
           <Route path="leaves/:id" element={<StudentLeaveList />} />
           <Route path="add-leave" element={<AddStudentLeave />} />
           <Route path="attendance/:id" element={<ViewStudentAttendance />} />
