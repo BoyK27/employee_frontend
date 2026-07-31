@@ -3,46 +3,65 @@ import { fetchDepartments } from "../../utils/EmployeeHelper";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const EditStudent = () => {
   const [student, setStudent] = useState({
     name: "",
     studentId: "",
-    form: "",
+    classId: "",
     stream: "",
     department: "",
   });
-  const [departments, setDepartments] = useState(null);
+  const [departments, setDepartments] = useState([]);
+  const [classes, setClasses] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
   const { id } = useParams();
 
   useEffect(() => {
-    const getDepartments = async () => {
-      const deps = await fetchDepartments();
-      setDepartments(deps);
+    const fetchDropdowns = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const [deps, classRes] = await Promise.all([
+          fetchDepartments(),
+          axios.get(`${API_BASE_URL}/api/class`, { headers }),
+        ]);
+
+        setDepartments(deps || []);
+        if (classRes.data.success) {
+          setClasses(classRes.data.classes || []);
+        }
+      } catch (error) {
+        console.error("Error fetching dropdowns:", error);
+      }
     };
-    getDepartments();
+    fetchDropdowns();
   }, []);
 
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const response = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/student/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+        const response = await axios.get(`${API_BASE_URL}/api/student/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        );
+        });
         if (response.data.success) {
           const studentData = response.data.student;
           setStudent({
             name: studentData.userId?.name || studentData.name || "",
             studentId: studentData.studentId || studentData.matricule || "",
-            form: studentData.form || studentData.level || "",
-            stream: studentData.stream || studentData.program || "",
+            classId:
+              studentData.classId?._id ||
+              studentData.classId ||
+              studentData.class ||
+              "",
+            stream: studentData.stream || "",
             department:
               studentData.department?._id || studentData.department || "",
           });
@@ -56,22 +75,8 @@ const EditStudent = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setStudent((prevData) => {
-      const updated = { ...prevData, [name]: value };
-      // Reset stream if changing between junior/senior form types
-      if (name === "form") {
-        updated.stream = "";
-      }
-      return updated;
-    });
+    setStudent((prevData) => ({ ...prevData, [name]: value }));
   };
-
-  const isSeniorClass = [
-    "Form 4",
-    "Form 5",
-    "Lower Sixth",
-    "Upper Sixth",
-  ].includes(student.form);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,7 +84,7 @@ const EditStudent = () => {
 
     try {
       const response = await axios.put(
-        `https://ems-backend-hazel.vercel.app/api/student/${id}`,
+        `${API_BASE_URL}/api/student/${id}`,
         student,
         {
           headers: {
@@ -93,7 +98,7 @@ const EditStudent = () => {
     } catch (error) {
       alert(
         error.response?.data?.error ||
-          "Something went wrong. Please try again.",
+          "Something went wrong updating student details.",
       );
     } finally {
       setLoading(false);
@@ -109,7 +114,7 @@ const EditStudent = () => {
               Edit Student Details
             </h2>
             <p className="text-teal-100 text-sm">
-              Update class level, stream, and department details
+              Update student class, stream, and department assignment
             </p>
           </div>
 
@@ -147,26 +152,24 @@ const EditStudent = () => {
                 />
               </div>
 
-              {/* Form / Class Level */}
+              {/* Dynamic Class Selector */}
               <div className="flex flex-col">
                 <label className="text-xs font-bold text-gray-500 uppercase mb-1 ml-1">
-                  Form / Class Level
+                  Assigned Class
                 </label>
                 <select
-                  name="form"
+                  name="classId"
                   onChange={handleChange}
-                  value={student.form}
+                  value={student.classId}
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   required
                 >
                   <option value="">Select Class</option>
-                  <option value="Form 1">Form 1</option>
-                  <option value="Form 2">Form 2</option>
-                  <option value="Form 3">Form 3</option>
-                  <option value="Form 4">Form 4</option>
-                  <option value="Form 5">Form 5</option>
-                  <option value="Lower Sixth">Lower Sixth</option>
-                  <option value="Upper Sixth">Upper Sixth</option>
+                  {classes.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.className}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -180,23 +183,13 @@ const EditStudent = () => {
                   onChange={handleChange}
                   value={student.stream}
                   className="w-full p-3 bg-gray-50 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-                  required
                 >
                   <option value="">Select Stream / Arm</option>
-                  {!isSeniorClass ? (
-                    <>
-                      <option value="Branch A">Branch A</option>
-                      <option value="Branch B">Branch B</option>
-                      <option value="Branch C">Branch C</option>
-                      <option value="Branch D">Branch D</option>
-                      <option value="Branch E">Branch E</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="Arts">Arts</option>
-                      <option value="Science">Science</option>
-                    </>
-                  )}
+                  <option value="Branch A">Branch A</option>
+                  <option value="Branch B">Branch B</option>
+                  <option value="Branch C">Branch C</option>
+                  <option value="Arts">Arts</option>
+                  <option value="Science">Science</option>
                 </select>
               </div>
 

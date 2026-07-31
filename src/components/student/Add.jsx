@@ -4,21 +4,41 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const AddStudent = () => {
   const [departments, setDepartments] = useState([]);
+  const [classes, setClasses] = useState([]); // 🚀 Dynamic Class State
   const [formData, setFormData] = useState({
     role: "student",
+    classId: "",
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const getDepartments = async () => {
-      const deps = await fetchDepartments();
-      setDepartments(deps);
+    const fetchInitialData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const headers = { Authorization: `Bearer ${token}` };
+
+        // Fetch Departments & Classes in parallel
+        const [deps, classRes] = await Promise.all([
+          fetchDepartments(),
+          axios.get(`${API_BASE_URL}/api/class`, { headers }),
+        ]);
+
+        setDepartments(deps || []);
+        if (classRes.data.success) {
+          setClasses(classRes.data.classes || []);
+        }
+      } catch (error) {
+        console.error("Error loading form dropdowns:", error);
+      }
     };
-    getDepartments();
+    fetchInitialData();
   }, []);
 
   const handleChange = (e) => {
@@ -29,13 +49,6 @@ const AddStudent = () => {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
   };
-
-  const isSeniorClass = [
-    "Form 4",
-    "Form 5",
-    "Lower Sixth",
-    "Upper Sixth",
-  ].includes(formData.form);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,7 +61,7 @@ const AddStudent = () => {
 
     try {
       const response = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/student/add",
+        `${API_BASE_URL}/api/student/add`,
         formDataObj,
         {
           headers: {
@@ -60,8 +73,10 @@ const AddStudent = () => {
         navigate("/admin-dashboard/students");
       }
     } catch (error) {
-      console.error(error);
-      const errorMsg = error.response?.data?.error || "Something went wrong";
+      console.error("Add Student Error:", error);
+      const errorMsg =
+        error.response?.data?.error ||
+        "Something went wrong registering student";
       alert(errorMsg);
     } finally {
       setLoading(false);
@@ -119,45 +134,33 @@ const AddStudent = () => {
             <option value="female">Female</option>
           </FormSelect>
 
-          {/* FORM / CLASS SELECTION */}
+          {/* DYNAMIC CLASS SELECTION */}
           <FormSelect
-            label="Form / Class Level"
-            name="form"
+            label="Assigned Class"
+            name="classId"
             onChange={handleChange}
             required
           >
             <option value="">Select Class</option>
-            <option value="Form 1">Form 1</option>
-            <option value="Form 2">Form 2</option>
-            <option value="Form 3">Form 3</option>
-            <option value="Form 4">Form 4</option>
-            <option value="Form 5">Form 5</option>
-            <option value="Lower Sixth">Lower Sixth</option>
-            <option value="Upper Sixth">Upper Sixth</option>
+            {classes.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.className}
+              </option>
+            ))}
           </FormSelect>
 
-          {/* STREAM / ARM BRANCH SELECTION */}
+          {/* STREAM / BRANCH SELECTION */}
           <FormSelect
             label="Class Arm / Stream"
             name="stream"
             onChange={handleChange}
-            required
           >
-            <option value="">Select Stream / Arm</option>
-            {!isSeniorClass ? (
-              <>
-                <option value="Branch A">Branch A</option>
-                <option value="Branch B">Branch B</option>
-                <option value="Branch C">Branch C</option>
-                <option value="Branch D">Branch D</option>
-                <option value="Branch E">Branch E</option>
-              </>
-            ) : (
-              <>
-                <option value="Arts">Arts</option>
-                <option value="Science">Science</option>
-              </>
-            )}
+            <option value="">Select Stream / Arm (Optional)</option>
+            <option value="Branch A">Branch A</option>
+            <option value="Branch B">Branch B</option>
+            <option value="Branch C">Branch C</option>
+            <option value="Arts">Arts</option>
+            <option value="Science">Science</option>
           </FormSelect>
 
           <FormSelect
@@ -174,7 +177,7 @@ const AddStudent = () => {
             ))}
           </FormSelect>
 
-          {/* PASSWORD FIELD WITH EYE ICON */}
+          {/* PASSWORD FIELD */}
           <div className="relative">
             <FormInput
               label="Password"

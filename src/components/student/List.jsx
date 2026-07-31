@@ -4,6 +4,9 @@ import { columns, StudentButtons } from "../../utils/StudentHelper";
 import DataTable from "react-data-table-component";
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const List = () => {
   const [students, setStudents] = useState([]);
   const [stdLoading, setStdLoading] = useState(false);
@@ -13,20 +16,18 @@ const List = () => {
     const fetchStudents = async () => {
       setStdLoading(true);
       try {
-        const response = await axios.get(
-          "https://ems-backend-hazel.vercel.app/api/student",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+        const response = await axios.get(`${API_BASE_URL}/api/student`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        );
+        });
         if (response.data.success) {
           let sno = 1;
           const data = response.data.students.map((std) => ({
             _id: std._id,
             sno: sno++,
-            studentId: std.studentId,
+            studentId: std.studentId || std.matricule || "N/A",
+            className: std.classId?.className || std.class?.className || "N/A",
             dep_name: std.department?.dep_name || "N/A",
             name: std.userId?.name || "N/A",
             dob: std.dob ? new Date(std.dob).toLocaleDateString() : "N/A",
@@ -36,10 +37,9 @@ const List = () => {
                 height={35}
                 className="rounded-full object-cover border"
                 src={std.userId?.profileImage || "/avatar.png"}
-                alt={std.userId?.name}
+                alt={std.userId?.name || "Student"}
               />
             ),
-            // rawImage preserved for mobile card styling
             rawImage: std.userId?.profileImage || "/avatar.png",
             action: <StudentButtons Id={std._id} />,
           }));
@@ -47,8 +47,11 @@ const List = () => {
           setFilteredStudents(data);
         }
       } catch (error) {
+        console.error("Error fetching student list:", error);
         if (error.response && !error.response.data.success) {
           alert(error.response.data.error);
+        } else {
+          alert("Error fetching students list");
         }
       } finally {
         setStdLoading(false);
@@ -58,10 +61,12 @@ const List = () => {
   }, []);
 
   const handleFilter = (e) => {
+    const query = e.target.value.toLowerCase();
     const records = students.filter(
       (std) =>
-        std.name.toLowerCase().includes(e.target.value.toLowerCase()) ||
-        std.studentId.toLowerCase().includes(e.target.value.toLowerCase()),
+        std.name.toLowerCase().includes(query) ||
+        std.studentId.toLowerCase().includes(query) ||
+        std.className.toLowerCase().includes(query),
     );
     setFilteredStudents(records);
   };
@@ -85,7 +90,7 @@ const List = () => {
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
         <input
           type="text"
-          placeholder="Search by Name or ID..."
+          placeholder="Search by Name, ID, or Class..."
           className="w-full md:w-72 px-4 py-3 border rounded-xl shadow-sm focus:ring-2 focus:ring-teal-500 outline-none transition-all"
           onChange={handleFilter}
         />
@@ -120,7 +125,7 @@ const List = () => {
                   </span>
                 </div>
                 <p className="text-xs font-bold text-teal-600 uppercase mt-0.5">
-                  ID: {std.studentId}
+                  ID: {std.studentId} | {std.className}
                 </p>
                 <p className="text-gray-500 text-sm">{std.dep_name}</p>
               </div>
@@ -153,7 +158,6 @@ const List = () => {
   );
 };
 
-// Professional Table Styling for Desktop
 const customTableStyles = {
   headCells: {
     style: {

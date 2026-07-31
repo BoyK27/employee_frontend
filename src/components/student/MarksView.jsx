@@ -2,11 +2,15 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Award, GraduationCap, BarChart2 } from "lucide-react";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const MarksView = () => {
   const [report, setReport] = useState({
     marks: [],
     totalScore: 0,
     average: "0.00",
+    totalSubjects: 0,
   });
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("all");
@@ -16,32 +20,50 @@ const MarksView = () => {
   const headers = { Authorization: `Bearer ${token}` };
 
   useEffect(() => {
-    axios
-      .get("https://ems-backend-hazel.vercel.app/api/exam-session", { headers })
-      .then((res) => {
-        if (res.data.success) setSessions(res.data.sessions);
-      });
+    const fetchSessions = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/exam-session`, {
+          headers,
+        });
+        if (res.data.success) {
+          setSessions(res.data.sessions || []);
+        }
+      } catch (err) {
+        console.error("Error fetching exam sessions:", err);
+      }
+    };
+    fetchSessions();
   }, []);
 
   useEffect(() => {
     const fetchStudentReport = async () => {
       try {
         const res = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/mark/student/${user._id}/${selectedSession}`,
+          `${API_BASE_URL}/api/mark/student/${user._id}/${selectedSession}`,
           { headers },
         );
-        if (res.data.success) setReport(res.data);
+        if (res.data.success) {
+          setReport({
+            marks: res.data.marks || [],
+            totalScore: res.data.totalScore || 0,
+            average: res.data.average || "0.00",
+            totalSubjects:
+              res.data.totalSubjects || res.data.marks?.length || 0,
+          });
+        }
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching student marks report:", err);
       }
     };
-    if (user._id) fetchStudentReport();
+    if (user._id) {
+      fetchStudentReport();
+    }
   }, [selectedSession, user._id]);
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header Banner */}
-      <div className="bg-teal-600 text-white p-6 rounded-xl shadow-md flex justify-between items-center">
+      <div className="bg-teal-600 text-white p-6 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
             <GraduationCap className="h-7 w-7" /> Academic Results
@@ -53,7 +75,7 @@ const MarksView = () => {
         <select
           value={selectedSession}
           onChange={(e) => setSelectedSession(e.target.value)}
-          className="p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none"
+          className="w-full md:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300"
         >
           <option value="all">All Sessions</option>
           {sessions.map((s) => (
@@ -101,7 +123,7 @@ const MarksView = () => {
               Evaluated Subjects
             </p>
             <p className="text-2xl font-extrabold text-purple-600">
-              {report.totalSubjects || 0}
+              {report.totalSubjects}
             </p>
           </div>
         </div>
@@ -127,16 +149,16 @@ const MarksView = () => {
                 report.marks.map((m) => (
                   <tr
                     key={m._id}
-                    className="border-b border-gray-100 hover:bg-teal-50/20"
+                    className="border-b border-gray-100 hover:bg-teal-50/20 transition-colors"
                   >
                     <td className="p-3 font-semibold text-gray-800">
-                      {m.subjectId?.subjectName}
+                      {m.subjectId?.subjectName || "N/A"}
                     </td>
                     <td className="p-3 font-mono text-xs">
-                      {m.subjectId?.subjectCode}
+                      {m.subjectId?.subjectCode || "N/A"}
                     </td>
                     <td className="p-3 font-medium text-gray-600">
-                      {m.examSessionId?.sessionName}
+                      {m.examSessionId?.sessionName || "N/A"}
                     </td>
                     <td className="p-3 text-center font-bold text-teal-700 text-lg">
                       {m.score}
