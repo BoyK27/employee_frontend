@@ -21,7 +21,7 @@ const MarksView = () => {
   const [selectedSession, setSelectedSession] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // 1. Fetch sessions once on component mount
+  // 1. Fetch published sessions once on component mount
   useEffect(() => {
     const fetchSessions = async () => {
       try {
@@ -44,11 +44,12 @@ const MarksView = () => {
     fetchSessions();
   }, []);
 
+  // 2. Fetch Student Report when session or student profile changes
   useEffect(() => {
     const fetchStudentReport = async () => {
       const token = localStorage.getItem("token");
 
-      // Safely pull user from localStorage or AuthContext
+      // Safely pull user from localStorage or AuthContext fallback
       let localUser = {};
       try {
         localUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -73,8 +74,6 @@ const MarksView = () => {
           },
         );
 
-        console.log("[MarksView Data]:", res.data);
-
         if (res.data?.success) {
           setReport({
             marks: res.data.marks || [],
@@ -94,17 +93,18 @@ const MarksView = () => {
     fetchStudentReport();
   }, [selectedSession, urlStudentId, user]);
 
-  //FIX: Calculate total max possible score across all subjects dynamically
+  // 🚀 DYNAMIC SCALE COMPUTATIONS:
+  // Dynamically sum maximum possible scores across all fetched subjects
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
   );
 
-  // 🚀 FIX: Calculate normalized base-20 overall average accurately
+  // Calculate normalized base-20 overall average accurately based on dynamic outOf values
   const calculatedNormalizedAverage =
     maxPossibleScore > 0
       ? ((report.totalScore / maxPossibleScore) * 20).toFixed(2)
-      : "0.00";
+      : report.average || "0.00";
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -121,7 +121,7 @@ const MarksView = () => {
         <select
           value={selectedSession}
           onChange={(e) => setSelectedSession(e.target.value)}
-          className="w-full md:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300"
+          className="w-full md:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer"
         >
           <option value="all">All Published Sessions</option>
           {sessions.map((s) => (
