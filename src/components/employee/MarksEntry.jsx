@@ -13,7 +13,7 @@ const MarksEntry = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedSession, setSelectedSession] = useState("");
-  const [outOf, setOutOf] = useState(20); // 👈 Baseline max score setting
+  const [outOf, setOutOf] = useState(20); // Dynamic baseline score scale
 
   const [students, setStudents] = useState([]);
   const [marksMap, setMarksMap] = useState({});
@@ -65,7 +65,7 @@ const MarksEntry = () => {
 
       if (res.data.success) {
         setStudents(res.data.students || []);
-        if (res.data.outOf) setOutOf(res.data.outOf); // Pre-fill saved scale if exists
+        if (res.data.outOf) setOutOf(Number(res.data.outOf));
 
         const map = {};
         (res.data.marks || []).forEach((m) => {
@@ -79,25 +79,42 @@ const MarksEntry = () => {
     }
   };
 
-  const handleScoreChange = (studentId, score) => {
-    const numScore = Number(score);
+  const handleScoreChange = (studentId, rawValue) => {
+    // Keep raw string in map to allow easy typing/clearing
+    if (rawValue === "") {
+      setMarksMap((prev) => ({ ...prev, [studentId]: "" }));
+      return;
+    }
+
+    const numScore = Number(rawValue);
     if (numScore > outOf) {
       alert(`Score cannot exceed total marks (/${outOf})`);
       return;
     }
-    setMarksMap((prev) => ({ ...prev, [studentId]: score }));
+    setMarksMap((prev) => ({ ...prev, [studentId]: rawValue }));
   };
 
   const handleSaveMarks = async () => {
+    if (students.length === 0) return;
     setSaving(true);
-    const marksPayload = Object.keys(marksMap).map((studentId) => ({
-      studentId,
-      subjectId: selectedSubject,
-      classId: selectedClass,
-      examSessionId: selectedSession,
-      score: Number(marksMap[studentId]) || 0,
-      outOf: Number(outOf), // 👈 Send max base score to backend
-    }));
+
+    // 🚀 FIX: Map over `students` array to build a complete, non-NaN payload
+    const marksPayload = students.map((st) => {
+      const rawScore = marksMap[st._id];
+      const parsedScore =
+        rawScore === "" || rawScore === undefined || isNaN(Number(rawScore))
+          ? 0
+          : Number(rawScore);
+
+      return {
+        studentId: st._id,
+        subjectId: selectedSubject,
+        classId: selectedClass,
+        examSessionId: selectedSession,
+        score: Math.min(parsedScore, Number(outOf)), // Clamp to outOf cap
+        outOf: Number(outOf) || 20,
+      };
+    });
 
     try {
       const res = await axios.post(
@@ -105,11 +122,12 @@ const MarksEntry = () => {
         { marks: marksPayload },
         { headers },
       );
-      if (res.data.success)
+      if (res.data.success) {
         alert(`Marks saved successfully (Scale /${outOf})!`);
+      }
     } catch (err) {
-      console.error("Error saving marks:", err);
-      alert("Failed to save marks");
+      console.error("Error saving marks:", err.response?.data || err.message);
+      alert(err.response?.data?.error || "Failed to save marks");
     } finally {
       setSaving(false);
     }
@@ -184,7 +202,7 @@ const MarksEntry = () => {
           </select>
         </div>
 
-        {/* 🚀 Dynamic Baseline Max Score Selector */}
+        {/* Dynamic Baseline Max Score Selector */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1 flex items-center gap-1">
             <Target className="w-4 h-4 text-teal-600" /> Evaluation Base Mark
