@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Award, GraduationCap, BarChart2, EyeOff, Loader2 } from "lucide-react";
-import { useAuth } from "../../context/authContext"; // 👈 Access user directly from Auth Context
+import { useAuth } from "../../context/authContext";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
 
 const MarksView = () => {
   const { id: urlStudentId } = useParams();
-  const { user } = useAuth(); // 🚀 Reliable user context fallback
+  const { user } = useAuth();
 
   const [report, setReport] = useState({
     marks: [],
@@ -50,7 +50,6 @@ const MarksView = () => {
       const token = localStorage.getItem("token");
       const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-      // 🚀 Prioritize URL ID -> Auth Context ID -> LocalStorage User ID
       const studentIdentifier =
         urlStudentId || user?._id || user?.id || localUser._id || localUser.id;
 
@@ -68,8 +67,6 @@ const MarksView = () => {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
-
-        console.log("[MarksView Response]:", res.data); // 🔍 Debug log in browser console
 
         if (res.data?.success) {
           setReport({
@@ -90,10 +87,17 @@ const MarksView = () => {
     fetchStudentReport();
   }, [selectedSession, urlStudentId, user]);
 
+  // 🚀 FIX: Calculate total max possible score across all subjects dynamically
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
   );
+
+  // 🚀 FIX: Calculate normalized base-20 overall average accurately
+  const calculatedNormalizedAverage =
+    maxPossibleScore > 0
+      ? ((report.totalScore / maxPossibleScore) * 20).toFixed(2)
+      : "0.00";
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -132,7 +136,7 @@ const MarksView = () => {
               Overall Average
             </p>
             <p className="text-2xl font-extrabold text-teal-600">
-              {report.average} / 20
+              {calculatedNormalizedAverage} / 20
             </p>
           </div>
         </div>
@@ -200,7 +204,6 @@ const MarksView = () => {
                     key={m._id}
                     className="border-b border-gray-100 hover:bg-teal-50/20 transition-colors"
                   >
-                    {/* 🚀 Robust Property Access: Handles name vs subjectName */}
                     <td className="p-3 font-semibold text-gray-800">
                       {m.subjectId?.name || m.subjectId?.subjectName || "N/A"}
                     </td>
