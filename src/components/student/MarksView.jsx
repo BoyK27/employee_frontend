@@ -44,18 +44,23 @@ const MarksView = () => {
     fetchSessions();
   }, []);
 
-  // 2. Fetch student report when session or ID changes
   useEffect(() => {
     const fetchStudentReport = async () => {
       const token = localStorage.getItem("token");
-      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
+
+      // Safely pull user from localStorage or AuthContext
+      let localUser = {};
+      try {
+        localUser = JSON.parse(localStorage.getItem("user") || "{}");
+      } catch (e) {
+        console.error("Error parsing user from localStorage", e);
+      }
 
       const studentIdentifier =
         urlStudentId || user?._id || user?.id || localUser._id || localUser.id;
 
       if (!studentIdentifier) {
-        console.warn("[MarksView] Missing student identifier.");
-        setLoading(false);
+        console.warn("[MarksView] Waiting for student identifier...");
         return;
       }
 
@@ -67,6 +72,8 @@ const MarksView = () => {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
+
+        console.log("[MarksView Data]:", res.data);
 
         if (res.data?.success) {
           setReport({
@@ -87,7 +94,7 @@ const MarksView = () => {
     fetchStudentReport();
   }, [selectedSession, urlStudentId, user]);
 
-  // 🚀 FIX: Calculate total max possible score across all subjects dynamically
+  //FIX: Calculate total max possible score across all subjects dynamically
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
