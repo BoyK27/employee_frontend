@@ -60,6 +60,12 @@ const MarksView = () => {
     }
   }, [selectedSession, user._id]);
 
+  // Calculate cumulative possible baseline (sum of outOf values)
+  const maxPossibleScore = report.marks.reduce(
+    (acc, m) => acc + (m.outOf || 20),
+    0,
+  );
+
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
       {/* Header Banner */}
@@ -109,7 +115,10 @@ const MarksView = () => {
           <div>
             <p className="text-sm font-semibold text-gray-500">Total Score</p>
             <p className="text-2xl font-extrabold text-blue-600">
-              {report.totalScore}
+              {report.totalScore}{" "}
+              <span className="text-sm font-semibold text-gray-400">
+                / {maxPossibleScore}
+              </span>
             </p>
           </div>
         </div>
@@ -141,7 +150,7 @@ const MarksView = () => {
                 <th className="p-3">Subject</th>
                 <th className="p-3">Code</th>
                 <th className="p-3">Exam Session</th>
-                <th className="p-3 text-center">Score</th>
+                <th className="p-3 text-center">Score Ratio</th>
               </tr>
             </thead>
             <tbody>
@@ -161,7 +170,10 @@ const MarksView = () => {
                       {m.examSessionId?.sessionName || "N/A"}
                     </td>
                     <td className="p-3 text-center font-bold text-teal-700 text-lg">
-                      {m.score}
+                      {m.score}{" "}
+                      <span className="text-sm font-medium text-gray-500">
+                        / {m.outOf || 20}
+                      </span>
                     </td>
                   </tr>
                 ))
