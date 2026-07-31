@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom"; // 👈 Import useParams!
+import { useParams } from "react-router-dom";
 import axios from "axios";
 import { Award, GraduationCap, BarChart2, EyeOff, Loader2 } from "lucide-react";
+import { useAuth } from "../../context/authContext"; // 👈 Access user directly from Auth Context
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
 
 const MarksView = () => {
-  const { id: urlStudentId } = useParams(); // 🚀 Pull ID from URL route (/results/:id)
+  const { id: urlStudentId } = useParams();
+  const { user } = useAuth(); // 🚀 Reliable user context fallback
 
   const [report, setReport] = useState({
     marks: [],
@@ -42,16 +44,18 @@ const MarksView = () => {
     fetchSessions();
   }, []);
 
-  // 2. Fetch student report when session or URL ID changes
+  // 2. Fetch student report when session or ID changes
   useEffect(() => {
     const fetchStudentReport = async () => {
       const token = localStorage.getItem("token");
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const localUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-      // 🚀 Use URL parameter ID first! If not present, fallback to user._id / user.id
-      const studentIdentifier = urlStudentId || user._id || user.id;
+      // 🚀 Prioritize URL ID -> Auth Context ID -> LocalStorage User ID
+      const studentIdentifier =
+        urlStudentId || user?._id || user?.id || localUser._id || localUser.id;
 
       if (!studentIdentifier) {
+        console.warn("[MarksView] Missing student identifier.");
         setLoading(false);
         return;
       }
@@ -64,6 +68,8 @@ const MarksView = () => {
             headers: { Authorization: `Bearer ${token}` },
           },
         );
+
+        console.log("[MarksView Response]:", res.data); // 🔍 Debug log in browser console
 
         if (res.data?.success) {
           setReport({
@@ -82,7 +88,7 @@ const MarksView = () => {
     };
 
     fetchStudentReport();
-  }, [selectedSession, urlStudentId]); // 👈 List urlStudentId here
+  }, [selectedSession, urlStudentId, user]);
 
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
@@ -194,11 +200,12 @@ const MarksView = () => {
                     key={m._id}
                     className="border-b border-gray-100 hover:bg-teal-50/20 transition-colors"
                   >
+                    {/* 🚀 Robust Property Access: Handles name vs subjectName */}
                     <td className="p-3 font-semibold text-gray-800">
-                      {m.subjectId?.subjectName || "N/A"}
+                      {m.subjectId?.name || m.subjectId?.subjectName || "N/A"}
                     </td>
                     <td className="p-3 font-mono text-xs">
-                      {m.subjectId?.subjectCode || "N/A"}
+                      {m.subjectId?.code || m.subjectId?.subjectCode || "N/A"}
                     </td>
                     <td className="p-3 font-medium text-gray-600">
                       {m.examSessionId?.sessionName || "N/A"}
