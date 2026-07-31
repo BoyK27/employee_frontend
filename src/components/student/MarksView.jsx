@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useParams } from "react-router-dom"; // 👈 Import useParams!
 import axios from "axios";
 import { Award, GraduationCap, BarChart2, EyeOff, Loader2 } from "lucide-react";
 
@@ -6,6 +7,8 @@ const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
 
 const MarksView = () => {
+  const { id: urlStudentId } = useParams(); // 🚀 Pull ID from URL route (/results/:id)
+
   const [report, setReport] = useState({
     marks: [],
     totalScore: 0,
@@ -39,12 +42,14 @@ const MarksView = () => {
     fetchSessions();
   }, []);
 
-  // 2. Fetch student report ONLY when selectedSession changes
+  // 2. Fetch student report when session or URL ID changes
   useEffect(() => {
     const fetchStudentReport = async () => {
       const token = localStorage.getItem("token");
       const user = JSON.parse(localStorage.getItem("user") || "{}");
-      const studentIdentifier = user._id || user.id;
+
+      // 🚀 Use URL parameter ID first! If not present, fallback to user._id / user.id
+      const studentIdentifier = urlStudentId || user._id || user.id;
 
       if (!studentIdentifier) {
         setLoading(false);
@@ -77,7 +82,7 @@ const MarksView = () => {
     };
 
     fetchStudentReport();
-  }, [selectedSession]); // 👈 ONLY listen to selectedSession
+  }, [selectedSession, urlStudentId]); // 👈 List urlStudentId here
 
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),

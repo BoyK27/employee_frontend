@@ -166,8 +166,8 @@ function App() {
           <Route path="profile/:id" element={<ViewStudent />} />
 
           {/* Grades & Report Card (NEW) */}
+          <Route path="results" element={<MarksView />} />
           <Route path="results/:id" element={<MarksView />} />
-
           <Route path="leaves/:id" element={<StudentLeaveList />} />
           <Route path="add-leave" element={<AddStudentLeave />} />
           <Route path="attendance/:id" element={<ViewStudentAttendance />} />
