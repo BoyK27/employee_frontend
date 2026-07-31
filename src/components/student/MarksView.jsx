@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
-import { Award, GraduationCap, BarChart2, EyeOff } from "lucide-react";
+import { Award, GraduationCap, BarChart2, EyeOff, Loader2 } from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
@@ -14,19 +14,29 @@ const MarksView = () => {
   });
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState("all");
+  const [loading, setLoading] = useState(true);
 
+  // Safely retrieve user & token
   const token = localStorage.getItem("token");
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const headers = { Authorization: `Bearer ${token}` };
+  const user = useMemo(
+    () => JSON.parse(localStorage.getItem("user") || "{}"),
+    [],
+  );
+  const studentIdentifier = user._id || user.id;
 
+  const headers = useMemo(
+    () => ({ Authorization: `Bearer ${token}` }),
+    [token],
+  );
+
+  // 1. Fetch sessions & filter for published ones only
   useEffect(() => {
     const fetchSessions = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/exam-session`, {
           headers,
         });
-        if (res.data.success) {
-          // 🚀 Filter sessions to show published ones to students
+        if (res.data?.success) {
           const published = (res.data.sessions || []).filter(
             (s) => s.isPublished,
           );
@@ -36,17 +46,23 @@ const MarksView = () => {
         console.error("Error fetching exam sessions:", err);
       }
     };
-    fetchSessions();
-  }, []);
 
+    fetchSessions();
+  }, [headers]);
+
+  // 2. Fetch student report for selected session
   useEffect(() => {
     const fetchStudentReport = async () => {
+      if (!studentIdentifier) return;
+
+      setLoading(true);
       try {
         const res = await axios.get(
-          `${API_BASE_URL}/api/mark/student/${user._id}/${selectedSession}`,
+          `${API_BASE_URL}/api/mark/student/${studentIdentifier}/${selectedSession}`,
           { headers },
         );
-        if (res.data.success) {
+
+        if (res.data?.success) {
           setReport({
             marks: res.data.marks || [],
             totalScore: res.data.totalScore || 0,
@@ -57,13 +73,15 @@ const MarksView = () => {
         }
       } catch (err) {
         console.error("Error fetching student marks report:", err);
+      } finally {
+        setLoading(false);
       }
     };
-    if (user._id) {
-      fetchStudentReport();
-    }
-  }, [selectedSession, user._id]);
 
+    fetchStudentReport();
+  }, [selectedSession, studentIdentifier, headers]);
+
+  // Dynamic max score calculation baseline
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
@@ -157,7 +175,18 @@ const MarksView = () => {
               </tr>
             </thead>
             <tbody>
-              {report.marks.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="4" className="text-center p-8 text-gray-500">
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <Loader2 className="w-7 h-7 text-teal-600 animate-spin" />
+                      <p className="text-sm font-semibold">
+                        Fetching academic report...
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              ) : report.marks.length > 0 ? (
                 report.marks.map((m) => (
                   <tr
                     key={m._id}
