@@ -4,6 +4,9 @@ import { columns, EmployeeButtons } from "../../utils/EmployeeHelper";
 import DataTable from "react-data-table-component";
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const List = () => {
   const [employees, setEmployees] = useState([]);
   const [empLoading, setEmpLoading] = useState(false);
@@ -13,42 +16,40 @@ const List = () => {
     const fetchEmployees = async () => {
       setEmpLoading(true);
       try {
-        const response = await axios.get(
-          "https://ems-backend-hazel.vercel.app/api/employee",
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+        const response = await axios.get(`${API_BASE_URL}/api/employee`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        );
+        });
+
         if (response.data.success) {
           let sno = 1;
           const data = response.data.employees.map((emp) => ({
             _id: emp._id,
             sno: sno++,
-            dep_name: emp.department.dep_name,
-            name: emp.userId.name,
-            dob: new Date(emp.dob).toLocaleDateString(),
+            dep_name: emp.department?.dep_name || "N/A",
+            name: emp.userId?.name || "N/A",
+            dob: emp.dob ? new Date(emp.dob).toLocaleDateString() : "N/A",
             profileImage: (
               <img
                 width={35}
                 height={35}
                 className="rounded-full object-cover border"
-                src={emp.userId.profileImage}
-                alt={emp.userId.name}
+                src={emp.userId?.profileImage || "/default-avatar.png"}
+                alt={emp.userId?.name || "Employee"}
               />
             ),
-            // rawImage preserved for mobile card styling
-            rawImage: emp.userId.profileImage,
+            rawImage: emp.userId?.profileImage || "/default-avatar.png",
             action: <EmployeeButtons DepId={emp._id} />,
           }));
           setEmployees(data);
           setFilteredEmployee(data);
         }
       } catch (error) {
-        if (error.response && !error.response.data.success) {
-          alert(error.response.data.error);
-        }
+        console.error("Error fetching employee list:", error);
+        const errorMsg =
+          error.response?.data?.error || "Error fetching employees";
+        alert(errorMsg);
       } finally {
         setEmpLoading(false);
       }
@@ -57,8 +58,9 @@ const List = () => {
   }, []);
 
   const handleFilter = (e) => {
+    const query = e.target.value.toLowerCase();
     const records = employees.filter((emp) =>
-      emp.name.toLowerCase().includes(e.target.value.toLowerCase()),
+      emp.name.toLowerCase().includes(query),
     );
     setFilteredEmployee(records);
   };
@@ -120,7 +122,6 @@ const List = () => {
               </div>
             </div>
 
-            {/* Action Buttons Section - No text label for maximum space */}
             <div className="border-t pt-4 flex justify-around">
               {emp.action}
             </div>
@@ -147,7 +148,6 @@ const List = () => {
   );
 };
 
-// Professional Table Styling for Desktop
 const customTableStyles = {
   headCells: {
     style: {

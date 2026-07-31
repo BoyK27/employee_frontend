@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from "react-router-dom";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const Edit = () => {
   const [employee, setEmployee] = useState({
     name: "",
@@ -30,17 +33,16 @@ const Edit = () => {
         const deps = await fetchDepartments();
         setDepartments(deps || []);
 
-        const classRes = await axios.get(
-          "https://ems-backend-hazel.vercel.app/api/class",
-          { headers },
-        );
-        if (classRes.data.success) setClassesList(classRes.data.classes);
+        const classRes = await axios.get(`${API_BASE_URL}/api/class`, {
+          headers,
+        });
+        if (classRes.data.success) setClassesList(classRes.data.classes || []);
 
-        const subjectRes = await axios.get(
-          "https://ems-backend-hazel.vercel.app/api/subject",
-          { headers },
-        );
-        if (subjectRes.data.success) setSubjectsList(subjectRes.data.subjects);
+        const subjectRes = await axios.get(`${API_BASE_URL}/api/subject`, {
+          headers,
+        });
+        if (subjectRes.data.success)
+          setSubjectsList(subjectRes.data.subjects || []);
       } catch (error) {
         console.error("Error fetching metadata:", error);
       }
@@ -51,14 +53,11 @@ const Edit = () => {
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
-        const response = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/employee/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+        const response = await axios.get(`${API_BASE_URL}/api/employee/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        );
+        });
         if (response.data.success) {
           const emp = response.data.employee;
           setEmployee({
@@ -69,7 +68,6 @@ const Edit = () => {
             department: emp.department?._id || emp.department || "",
           });
 
-          // Pre-populate assigned classes and subjects
           if (emp.classes) {
             setSelectedClasses(
               emp.classes.map((cls) =>
@@ -86,9 +84,9 @@ const Edit = () => {
           }
         }
       } catch (error) {
-        if (error.response && !error.response.data.success) {
-          alert(error.response.data.error);
-        }
+        const errorMsg =
+          error.response?.data?.error || "Failed to load employee details";
+        alert(errorMsg);
       }
     };
     fetchEmployee();
@@ -126,7 +124,7 @@ const Edit = () => {
 
     try {
       const response = await axios.put(
-        `https://ems-backend-hazel.vercel.app/api/employee/${id}`,
+        `${API_BASE_URL}/api/employee/${id}`,
         payload,
         {
           headers: {
@@ -138,11 +136,9 @@ const Edit = () => {
         navigate("/admin-dashboard/employees");
       }
     } catch (error) {
-      if (error.response && !error.response.data.success) {
-        alert(error.response.data.error);
-      } else {
-        alert("Something went wrong. Please try again");
-      }
+      const errorMsg =
+        error.response?.data?.error || "Something went wrong updating employee";
+      alert(errorMsg);
     }
   };
 
@@ -266,7 +262,7 @@ const Edit = () => {
                         className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
                       />
                       <span>
-                        {cls.className} ({cls.code})
+                        {cls.className} ({cls.code || cls.classCode || ""})
                       </span>
                     </label>
                   ))}

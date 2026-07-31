@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { CheckCircle2, Save, FileSpreadsheet } from "lucide-react";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const MarksEntry = () => {
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
@@ -22,17 +25,13 @@ const MarksEntry = () => {
     const fetchDropdowns = async () => {
       try {
         const [clsRes, sessRes] = await Promise.all([
-          axios.get("https://ems-backend-hazel.vercel.app/api/class", {
-            headers,
-          }),
-          axios.get("https://ems-backend-hazel.vercel.app/api/exam-session", {
-            headers,
-          }),
+          axios.get(`${API_BASE_URL}/api/class`, { headers }),
+          axios.get(`${API_BASE_URL}/api/exam-session`, { headers }),
         ]);
-        if (clsRes.data.success) setClasses(clsRes.data.classes);
-        if (sessRes.data.success) setSessions(sessRes.data.sessions);
+        if (clsRes.data.success) setClasses(clsRes.data.classes || []);
+        if (sessRes.data.success) setSessions(sessRes.data.sessions || []);
       } catch (err) {
-        console.error(err);
+        console.error("Error loading dropdown data:", err);
       }
     };
     fetchDropdowns();
@@ -41,13 +40,13 @@ const MarksEntry = () => {
   useEffect(() => {
     if (selectedClass) {
       axios
-        .get(
-          `https://ems-backend-hazel.vercel.app/api/subject/class/${selectedClass}`,
-          { headers },
-        )
+        .get(`${API_BASE_URL}/api/subject/class/${selectedClass}`, { headers })
         .then((res) => {
-          if (res.data.success) setSubjects(res.data.subjects);
-        });
+          if (res.data.success) setSubjects(res.data.subjects || []);
+        })
+        .catch((err) => console.error("Error fetching class subjects:", err));
+    } else {
+      setSubjects([]);
     }
   }, [selectedClass]);
 
@@ -58,21 +57,23 @@ const MarksEntry = () => {
     }
 
     try {
+      // 🚀 OPTION B FIX: Using Query Parameters matching backend req.query
       const res = await axios.get(
-        `https://ems-backend-hazel.vercel.app/api/mark/class/${selectedClass}/subject/${selectedSubject}/session/${selectedSession}`,
+        `${API_BASE_URL}/api/mark/class-subject?classId=${selectedClass}&subjectId=${selectedSubject}&examSessionId=${selectedSession}`,
         { headers },
       );
 
       if (res.data.success) {
-        setStudents(res.data.students);
+        setStudents(res.data.students || []);
         const map = {};
-        res.data.marks.forEach((m) => {
+        (res.data.marks || []).forEach((m) => {
           map[m.studentId] = m.score;
         });
         setMarksMap(map);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Error loading marks grid:", err);
+      alert("Failed to load student marks sheet");
     }
   };
 
@@ -87,17 +88,18 @@ const MarksEntry = () => {
       subjectId: selectedSubject,
       classId: selectedClass,
       examSessionId: selectedSession,
-      score: marksMap[studentId] || 0,
+      score: Number(marksMap[studentId]) || 0,
     }));
 
     try {
       const res = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/mark/save",
+        `${API_BASE_URL}/api/mark/save`,
         { marks: marksPayload },
         { headers },
       );
       if (res.data.success) alert("Marks saved successfully!");
     } catch (err) {
+      console.error("Error saving marks:", err);
       alert("Failed to save marks");
     } finally {
       setSaving(false);
@@ -126,7 +128,7 @@ const MarksEntry = () => {
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50"
+            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50 outline-none"
           >
             <option value="">Choose Class</option>
             {classes.map((c) => (
@@ -144,7 +146,7 @@ const MarksEntry = () => {
           <select
             value={selectedSubject}
             onChange={(e) => setSelectedSubject(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50"
+            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50 outline-none"
           >
             <option value="">Choose Subject</option>
             {subjects.map((s) => (
@@ -162,7 +164,7 @@ const MarksEntry = () => {
           <select
             value={selectedSession}
             onChange={(e) => setSelectedSession(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50"
+            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50 outline-none"
           >
             <option value="">Choose Evaluation Session</option>
             {sessions.map((se) => (
@@ -176,14 +178,14 @@ const MarksEntry = () => {
         <div className="md:col-span-3 pt-2">
           <button
             onClick={loadGrid}
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow transition-all"
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow transition-all active:scale-95"
           >
             Load Student Sheet
           </button>
         </div>
       </div>
 
-      {/* Marks Sheet */}
+      {/* Marks Sheet Table */}
       {students.length > 0 && (
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 space-y-4">
           <div className="flex justify-between items-center">
@@ -193,7 +195,7 @@ const MarksEntry = () => {
             <button
               onClick={handleSaveMarks}
               disabled={saving}
-              className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-6 py-2.5 rounded-lg shadow flex items-center gap-2"
+              className="bg-teal-600 hover:bg-teal-700 text-white font-bold px-6 py-2.5 rounded-lg shadow flex items-center gap-2 transition-all active:scale-95"
             >
               <Save size={18} /> {saving ? "Saving..." : "Save Marks"}
             </button>
@@ -212,11 +214,11 @@ const MarksEntry = () => {
                 {students.map((st) => (
                   <tr
                     key={st._id}
-                    className="border-b border-gray-100 hover:bg-teal-50/20"
+                    className="border-b border-gray-100 hover:bg-teal-50/20 transition-colors"
                   >
                     <td className="p-3 font-mono text-sm">{st.studentId}</td>
                     <td className="p-3 font-semibold text-gray-800">
-                      {st.userId?.name}
+                      {st.userId?.name || "N/A"}
                     </td>
                     <td className="p-3 text-center">
                       <input
@@ -228,7 +230,7 @@ const MarksEntry = () => {
                           handleScoreChange(st._id, e.target.value)
                         }
                         placeholder="0"
-                        className="w-24 p-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-700 bg-gray-50"
+                        className="w-24 p-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-700 bg-gray-50 focus:bg-white"
                       />
                     </td>
                   </tr>

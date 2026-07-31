@@ -4,6 +4,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff } from "lucide-react";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const Add = () => {
   const [departments, setDepartments] = useState([]);
   const [classesList, setClassesList] = useState([]);
@@ -28,21 +31,19 @@ const Add = () => {
         setDepartments(deps || []);
 
         // Fetch Classes
-        const classRes = await axios.get(
-          "https://ems-backend-hazel.vercel.app/api/class",
-          { headers },
-        );
+        const classRes = await axios.get(`${API_BASE_URL}/api/class`, {
+          headers,
+        });
         if (classRes.data.success) {
-          setClassesList(classRes.data.classes);
+          setClassesList(classRes.data.classes || []);
         }
 
         // Fetch Subjects
-        const subjectRes = await axios.get(
-          "https://ems-backend-hazel.vercel.app/api/subject",
-          { headers },
-        );
+        const subjectRes = await axios.get(`${API_BASE_URL}/api/subject`, {
+          headers,
+        });
         if (subjectRes.data.success) {
-          setSubjectsList(subjectRes.data.subjects);
+          setSubjectsList(subjectRes.data.subjects || []);
         }
       } catch (error) {
         console.error("Error fetching form metadata:", error);
@@ -60,7 +61,6 @@ const Add = () => {
     }
   };
 
-  // Multi-select handlers for classes and subjects
   const handleClassToggle = (classId) => {
     setSelectedClasses((prev) =>
       prev.includes(classId)
@@ -86,13 +86,13 @@ const Add = () => {
       formDataObj.append(key, formData[key]);
     });
 
-    // Append multi-select arrays as JSON strings for multipart parsing
+    // Pass assigned multi-select values
     formDataObj.append("classes", JSON.stringify(selectedClasses));
     formDataObj.append("subjects", JSON.stringify(selectedSubjects));
 
     try {
       const response = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/employee/add",
+        `${API_BASE_URL}/api/employee/add`,
         formDataObj,
         {
           headers: {
@@ -104,7 +104,7 @@ const Add = () => {
         navigate("/admin-dashboard/employees");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Add Employee Error:", error);
       const errorMsg = error.response?.data?.error || "Something went wrong";
       alert(errorMsg);
     } finally {
@@ -263,7 +263,7 @@ const Add = () => {
                     className="rounded text-teal-600 focus:ring-teal-500 h-4 w-4"
                   />
                   <span>
-                    {cls.className} ({cls.code})
+                    {cls.className} ({cls.code || cls.classCode || ""})
                   </span>
                 </label>
               ))}
@@ -312,7 +312,6 @@ const Add = () => {
   );
 };
 
-// Reusable components
 const FormInput = ({ label, ...props }) => (
   <div className="w-full">
     <label className="block text-sm font-semibold text-gray-600 mb-1 ml-1">
