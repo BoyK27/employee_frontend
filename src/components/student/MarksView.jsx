@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Award, GraduationCap, BarChart2 } from "lucide-react";
+import { Award, GraduationCap, BarChart2, EyeOff } from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
@@ -26,7 +26,11 @@ const MarksView = () => {
           headers,
         });
         if (res.data.success) {
-          setSessions(res.data.sessions || []);
+          // 🚀 Filter sessions to show published ones to students
+          const published = (res.data.sessions || []).filter(
+            (s) => s.isPublished,
+          );
+          setSessions(published);
         }
       } catch (err) {
         console.error("Error fetching exam sessions:", err);
@@ -60,7 +64,6 @@ const MarksView = () => {
     }
   }, [selectedSession, user._id]);
 
-  // Calculate cumulative possible baseline (sum of outOf values)
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
@@ -75,7 +78,7 @@ const MarksView = () => {
             <GraduationCap className="h-7 w-7" /> Academic Results
           </h1>
           <p className="text-teal-100 text-sm">
-            View your examination scores & grades
+            View published examination scores & grades
           </p>
         </div>
         <select
@@ -83,7 +86,7 @@ const MarksView = () => {
           onChange={(e) => setSelectedSession(e.target.value)}
           className="w-full md:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300"
         >
-          <option value="all">All Sessions</option>
+          <option value="all">All Published Sessions</option>
           {sessions.map((s) => (
             <option key={s._id} value={s._id}>
               {s.sessionName}
@@ -179,8 +182,17 @@ const MarksView = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center p-6 text-gray-500">
-                    No examination marks published for this selection yet.
+                  <td colSpan="4" className="text-center p-8 text-gray-500">
+                    <div className="flex flex-col items-center gap-2">
+                      <EyeOff className="w-8 h-8 text-gray-400" />
+                      <p className="font-semibold">
+                        No published marks available yet.
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        If marks were recently submitted, please ensure the
+                        Administrator has published the Exam Session.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
