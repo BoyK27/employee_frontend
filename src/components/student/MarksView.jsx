@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { Award, GraduationCap, BarChart2, EyeOff, Loader2 } from "lucide-react";
 
@@ -16,26 +16,15 @@ const MarksView = () => {
   const [selectedSession, setSelectedSession] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // Safely retrieve user & token
-  const token = localStorage.getItem("token");
-  const user = useMemo(
-    () => JSON.parse(localStorage.getItem("user") || "{}"),
-    [],
-  );
-  const studentIdentifier = user._id || user.id;
-
-  const headers = useMemo(
-    () => ({ Authorization: `Bearer ${token}` }),
-    [token],
-  );
-
-  // 1. Fetch sessions & filter for published ones only
+  // 1. Fetch sessions once on component mount
   useEffect(() => {
     const fetchSessions = async () => {
       try {
+        const token = localStorage.getItem("token");
         const res = await axios.get(`${API_BASE_URL}/api/exam-session`, {
-          headers,
+          headers: { Authorization: `Bearer ${token}` },
         });
+
         if (res.data?.success) {
           const published = (res.data.sessions || []).filter(
             (s) => s.isPublished,
@@ -48,18 +37,27 @@ const MarksView = () => {
     };
 
     fetchSessions();
-  }, [headers]);
+  }, []);
 
-  // 2. Fetch student report for selected session
+  // 2. Fetch student report ONLY when selectedSession changes
   useEffect(() => {
     const fetchStudentReport = async () => {
-      if (!studentIdentifier) return;
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const studentIdentifier = user._id || user.id;
+
+      if (!studentIdentifier) {
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       try {
         const res = await axios.get(
           `${API_BASE_URL}/api/mark/student/${studentIdentifier}/${selectedSession}`,
-          { headers },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
         );
 
         if (res.data?.success) {
@@ -79,9 +77,8 @@ const MarksView = () => {
     };
 
     fetchStudentReport();
-  }, [selectedSession, studentIdentifier, headers]);
+  }, [selectedSession]); // 👈 ONLY listen to selectedSession
 
-  // Dynamic max score calculation baseline
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
