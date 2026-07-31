@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Save, FileSpreadsheet, Target } from "lucide-react";
+import {
+  Save,
+  FileSpreadsheet,
+  Target,
+  Loader2,
+  AlertCircle,
+} from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
@@ -13,11 +19,13 @@ const MarksEntry = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedSession, setSelectedSession] = useState("");
-  const [outOf, setOutOf] = useState(20); // Dynamic baseline score scale
+  const [outOf, setOutOf] = useState(20);
 
   const [students, setStudents] = useState([]);
   const [marksMap, setMarksMap] = useState({});
+  const [loadingGrid, setLoadingGrid] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
@@ -52,35 +60,53 @@ const MarksEntry = () => {
   }, [selectedClass]);
 
   const loadGrid = async () => {
+    setErrorMsg("");
     if (!selectedClass || !selectedSubject || !selectedSession) {
       alert("Please select Class, Subject, and Session first!");
       return;
     }
 
+    setLoadingGrid(true);
     try {
       const res = await axios.get(
         `${API_BASE_URL}/api/mark/class-subject?classId=${selectedClass}&subjectId=${selectedSubject}&examSessionId=${selectedSession}`,
         { headers },
       );
 
+      console.log("[MarksEntry loadGrid Response]:", res.data);
+
       if (res.data.success) {
-        setStudents(res.data.students || []);
+        const fetchedStudents = res.data.students || [];
+        setStudents(fetchedStudents);
+
+        if (fetchedStudents.length === 0) {
+          setErrorMsg(
+            "No students are enrolled/assigned to this selected Class.",
+          );
+        }
+
         if (res.data.outOf) setOutOf(Number(res.data.outOf));
 
         const map = {};
         (res.data.marks || []).forEach((m) => {
-          map[m.studentId] = m.score;
+          // Map marks by student ID string
+          const stId = m.studentId?._id || m.studentId;
+          map[stId] = m.score;
         });
         setMarksMap(map);
       }
     } catch (err) {
-      console.error("Error loading marks grid:", err);
-      alert("Failed to load student marks sheet");
+      console.error("Error loading marks grid:", err.response || err);
+      setErrorMsg(
+        err.response?.data?.error ||
+          "Failed to load student sheet from backend.",
+      );
+    } finally {
+      setLoadingGrid(false);
     }
   };
 
   const handleScoreChange = (studentId, rawValue) => {
-    // Keep raw string in map to allow easy typing/clearing
     if (rawValue === "") {
       setMarksMap((prev) => ({ ...prev, [studentId]: "" }));
       return;
@@ -98,7 +124,6 @@ const MarksEntry = () => {
     if (students.length === 0) return;
     setSaving(true);
 
-    // 🚀 FIX: Map over `students` array to build a complete, non-NaN payload
     const marksPayload = students.map((st) => {
       const rawScore = marksMap[st._id];
       const parsedScore =
@@ -111,7 +136,7 @@ const MarksEntry = () => {
         subjectId: selectedSubject,
         classId: selectedClass,
         examSessionId: selectedSession,
-        score: Math.min(parsedScore, Number(outOf)), // Clamp to outOf cap
+        score: Math.min(parsedScore, Number(outOf)),
         outOf: Number(outOf) || 20,
       };
     });
@@ -160,7 +185,7 @@ const MarksEntry = () => {
             <option value="">Choose Class</option>
             {classes.map((c) => (
               <option key={c._id} value={c._id}>
-                {c.className}
+                {c.className || c.name}
               </option>
             ))}
           </select>
@@ -178,7 +203,7 @@ const MarksEntry = () => {
             <option value="">Choose Subject</option>
             {subjects.map((s) => (
               <option key={s._id} value={s._id}>
-                {s.subjectName}
+                {s.subjectName || s.name}
               </option>
             ))}
           </select>
@@ -202,7 +227,6 @@ const MarksEntry = () => {
           </select>
         </div>
 
-        {/* Dynamic Baseline Max Score Selector */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1 flex items-center gap-1">
             <Target className="w-4 h-4 text-teal-600" /> Evaluation Base Mark
@@ -223,12 +247,28 @@ const MarksEntry = () => {
         <div className="md:col-span-4 pt-2">
           <button
             onClick={loadGrid}
-            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow transition-all active:scale-95"
+            disabled={loadingGrid}
+            className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            Load Student Sheet
+            {loadingGrid ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Loading Sheet...
+              </>
+            ) : (
+              "Load Student Sheet"
+            )}
           </button>
         </div>
       </div>
+
+      {/* Error / Empty Notification Banner */}
+      {errorMsg && (
+        <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+          <p className="text-sm font-medium">{errorMsg}</p>
+        </div>
+      )}
 
       {/* Marks Sheet Table */}
       {students.length > 0 && (
