@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { CheckCircle2, Save, FileSpreadsheet } from "lucide-react";
+import { Save, FileSpreadsheet, Target } from "lucide-react";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
@@ -13,6 +13,7 @@ const MarksEntry = () => {
   const [selectedClass, setSelectedClass] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [selectedSession, setSelectedSession] = useState("");
+  const [outOf, setOutOf] = useState(20); // 👈 Baseline max score setting
 
   const [students, setStudents] = useState([]);
   const [marksMap, setMarksMap] = useState({});
@@ -57,7 +58,6 @@ const MarksEntry = () => {
     }
 
     try {
-      // 🚀 OPTION B FIX: Using Query Parameters matching backend req.query
       const res = await axios.get(
         `${API_BASE_URL}/api/mark/class-subject?classId=${selectedClass}&subjectId=${selectedSubject}&examSessionId=${selectedSession}`,
         { headers },
@@ -65,6 +65,8 @@ const MarksEntry = () => {
 
       if (res.data.success) {
         setStudents(res.data.students || []);
+        if (res.data.outOf) setOutOf(res.data.outOf); // Pre-fill saved scale if exists
+
         const map = {};
         (res.data.marks || []).forEach((m) => {
           map[m.studentId] = m.score;
@@ -78,6 +80,11 @@ const MarksEntry = () => {
   };
 
   const handleScoreChange = (studentId, score) => {
+    const numScore = Number(score);
+    if (numScore > outOf) {
+      alert(`Score cannot exceed total marks (/${outOf})`);
+      return;
+    }
     setMarksMap((prev) => ({ ...prev, [studentId]: score }));
   };
 
@@ -89,6 +96,7 @@ const MarksEntry = () => {
       classId: selectedClass,
       examSessionId: selectedSession,
       score: Number(marksMap[studentId]) || 0,
+      outOf: Number(outOf), // 👈 Send max base score to backend
     }));
 
     try {
@@ -97,7 +105,8 @@ const MarksEntry = () => {
         { marks: marksPayload },
         { headers },
       );
-      if (res.data.success) alert("Marks saved successfully!");
+      if (res.data.success)
+        alert(`Marks saved successfully (Scale /${outOf})!`);
     } catch (err) {
       console.error("Error saving marks:", err);
       alert("Failed to save marks");
@@ -114,13 +123,13 @@ const MarksEntry = () => {
             <FileSpreadsheet className="h-7 w-7" /> Marks Entry Portal
           </h1>
           <p className="text-teal-100 text-sm">
-            Enter or update student marks seamlessly
+            Enter evaluation scores with precise max mark scales
           </p>
         </div>
       </div>
 
       {/* Selector Filters */}
-      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1">
             Select Class
@@ -175,7 +184,25 @@ const MarksEntry = () => {
           </select>
         </div>
 
-        <div className="md:col-span-3 pt-2">
+        {/* 🚀 Dynamic Baseline Max Score Selector */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-600 mb-1 flex items-center gap-1">
+            <Target className="w-4 h-4 text-teal-600" /> Evaluation Base Mark
+          </label>
+          <select
+            value={outOf}
+            onChange={(e) => setOutOf(Number(e.target.value))}
+            className="w-full p-2.5 border border-teal-500 bg-teal-50 font-bold text-teal-800 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+          >
+            <option value={20}>Score / 20</option>
+            <option value={30}>Score / 30</option>
+            <option value={40}>Score / 40</option>
+            <option value={50}>Score / 50</option>
+            <option value={100}>Score / 100</option>
+          </select>
+        </div>
+
+        <div className="md:col-span-4 pt-2">
           <button
             onClick={loadGrid}
             className="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg shadow transition-all active:scale-95"
@@ -207,7 +234,7 @@ const MarksEntry = () => {
                 <tr className="border-b border-gray-200 text-gray-500 text-sm uppercase bg-gray-50">
                   <th className="p-3">Matricule / ID</th>
                   <th className="p-3">Student Name</th>
-                  <th className="p-3 text-center">Score (/20 or /100)</th>
+                  <th className="p-3 text-center">Score (Max: /{outOf})</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,17 +248,22 @@ const MarksEntry = () => {
                       {st.userId?.name || "N/A"}
                     </td>
                     <td className="p-3 text-center">
-                      <input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={marksMap[st._id] ?? ""}
-                        onChange={(e) =>
-                          handleScoreChange(st._id, e.target.value)
-                        }
-                        placeholder="0"
-                        className="w-24 p-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-700 bg-gray-50 focus:bg-white"
-                      />
+                      <div className="flex items-center justify-center gap-2">
+                        <input
+                          type="number"
+                          min="0"
+                          max={outOf}
+                          value={marksMap[st._id] ?? ""}
+                          onChange={(e) =>
+                            handleScoreChange(st._id, e.target.value)
+                          }
+                          placeholder="0"
+                          className="w-24 p-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none font-bold text-teal-700 bg-gray-50 focus:bg-white"
+                        />
+                        <span className="font-semibold text-gray-500">
+                          / {outOf}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ))}

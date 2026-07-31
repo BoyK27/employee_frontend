@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
+
 const ViewStudent = () => {
   const { id } = useParams();
   const [student, setStudent] = useState(null);
@@ -9,14 +12,11 @@ const ViewStudent = () => {
   useEffect(() => {
     const fetchStudent = async () => {
       try {
-        const response = await axios.get(
-          `https://ems-backend-hazel.vercel.app/api/student/${id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
+        const response = await axios.get(`${API_BASE_URL}/api/student/${id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        );
+        });
         if (response.data.success) {
           setStudent(response.data.student);
         }
@@ -43,7 +43,7 @@ const ViewStudent = () => {
                 src={
                   student.userId?.profileImage ||
                   student.profileImage ||
-                  "/default-avatar.png"
+                  "/avatar.png"
                 }
                 alt={student.userId?.name || "Student"}
                 className="rounded-full border-4 border-teal-500 w-56 h-56 md:w-64 md:h-64 object-cover shadow-md"
@@ -75,7 +75,9 @@ const ViewStudent = () => {
                   Date of Birth:
                 </p>
                 <p className="font-medium text-gray-700">
-                  {student.dob ? new Date(student.dob).toDateString() : "N/A"}
+                  {student.dob
+                    ? new Date(student.dob).toLocaleDateString()
+                    : "N/A"}
                 </p>
               </div>
 
@@ -88,12 +90,16 @@ const ViewStudent = () => {
                 </p>
               </div>
 
+              {/* DYNAMIC CLASS DISPLAY */}
               <div className="flex items-center space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-sm font-bold text-gray-500 uppercase w-36">
-                  Class / Form:
+                  Class:
                 </p>
                 <p className="font-medium text-gray-700">
-                  {student.form || student.level || "N/A"}
+                  {student.classId?.className ||
+                    student.class?.className ||
+                    student.form ||
+                    "N/A"}
                 </p>
               </div>
 
