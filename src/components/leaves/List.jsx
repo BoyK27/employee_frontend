@@ -30,7 +30,7 @@ const List = () => {
   };
 
   useEffect(() => {
-    // If the URL parameter or user authentication state is missing/invalid, stop loading
+    // Stop loading if route param or user context isn't ready
     if (!id || id === "undefined" || id === "null" || !user) {
       setLoading(false);
       return;
@@ -90,6 +90,9 @@ const List = () => {
     setFilteredLeaves(data);
   };
 
+  // Check if current user is an employee (case-insensitive)
+  const isEmployee = user?.role?.toLowerCase() === "employee";
+
   // Loading View
   if (loading) {
     return (
@@ -124,10 +127,11 @@ const List = () => {
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center">
           <h3 className="text-2xl font-extrabold text-gray-800">
-            My Leave History
+            {isEmployee ? "My Leave History" : "Leave History"}
           </h3>
         </div>
 
+        {/* Action Header: Search + Request Leave Button */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
           <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
@@ -139,19 +143,28 @@ const List = () => {
             />
           </div>
 
-          {user?.role === "employee" && (
+          {/* Restored Take New Leave Button */}
+          {isEmployee && (
             <Link
               to="/employee-dashboard/add-leave"
-              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2 bg-teal-600 hover:bg-teal-700 font-bold rounded-lg text-white text-sm transition-all shadow active:scale-95"
+              className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-4 py-2.5 bg-teal-600 hover:bg-teal-700 font-bold rounded-lg text-white text-sm transition-all shadow active:scale-95 cursor-pointer"
             >
-              <Plus size={16} /> Take New Leave
+              <Plus size={18} /> Request Leave
             </Link>
           )}
         </div>
 
         {!filteredLeaves || filteredLeaves.length === 0 ? (
-          <div className="bg-white p-8 rounded-xl text-center text-gray-500 font-medium shadow-sm border border-gray-100">
-            No leave records found.
+          <div className="bg-white p-8 rounded-xl text-center text-gray-500 font-medium shadow-sm border border-gray-100 space-y-3">
+            <p>No leave records found.</p>
+            {isEmployee && (
+              <Link
+                to="/employee-dashboard/add-leave"
+                className="inline-flex items-center gap-2 text-teal-600 hover:text-teal-700 font-bold text-sm"
+              >
+                <Plus size={16} /> Request your first leave
+              </Link>
+            )}
           </div>
         ) : (
           <>
