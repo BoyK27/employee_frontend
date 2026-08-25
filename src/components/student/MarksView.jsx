@@ -24,10 +24,17 @@ const MarksView = () => {
   const [selectedSession, setSelectedSession] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // Helper to fetch authorization headers
+  // Helper for Authorization Headers
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
     return { Authorization: `Bearer ${token}` };
+  };
+
+  // Handler to explicitly reset session filter on semester change
+  const handleSemesterChange = (e) => {
+    const newSemester = e.target.value;
+    setSelectedSemester(newSemester);
+    setSelectedSession("all"); // Immediately reset exam session selection
   };
 
   // 1. Fetch Semesters list on mount
@@ -50,7 +57,7 @@ const MarksView = () => {
     fetchSemesters();
   }, []);
 
-  // 2. Dynamically fetch Exam Sessions whenever selectedSemester changes
+  // 2. Fetch Sessions dynamically when selectedSemester changes
   useEffect(() => {
     const fetchSessions = async () => {
       try {
@@ -67,11 +74,6 @@ const MarksView = () => {
           const allSessions = sessRes.data.sessions || sessRes.data.data || [];
           const published = allSessions.filter((s) => s.isPublished);
           setSessions(published);
-
-          // Reset session filter if previously selected session isn't in the new list
-          if (!published.some((s) => s._id === selectedSession)) {
-            setSelectedSession("all");
-          }
         }
       } catch (err) {
         console.error("[MarksView] Error fetching sessions for semester:", err);
@@ -81,7 +83,7 @@ const MarksView = () => {
     fetchSessions();
   }, [selectedSemester]);
 
-  // 3. Fetch Student Report when filters or target student change
+  // 3. Fetch Student Report when target student or active filters change
   useEffect(() => {
     const fetchStudentReport = async () => {
       setLoading(true);
@@ -122,7 +124,6 @@ const MarksView = () => {
         }
 
         if (!targetStudentId) {
-          console.warn("[MarksView] Missing valid student identifier.");
           setLoading(false);
           return;
         }
@@ -162,7 +163,6 @@ const MarksView = () => {
     fetchStudentReport();
   }, [selectedSemester, selectedSession, urlStudentId, user]);
 
-  // Dynamic score scale calculations
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || m.maxScore || 20),
     0,
@@ -175,7 +175,6 @@ const MarksView = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6">
-      {/* Header Banner */}
       <div className="bg-teal-600 text-white p-6 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
@@ -186,12 +185,11 @@ const MarksView = () => {
           </p>
         </div>
 
-        {/* Filter Selectors */}
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          {/* Semester Filter */}
+          {/* Semester Selector */}
           <select
             value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
+            onChange={handleSemesterChange}
             className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer text-sm"
           >
             <option value="all">All Semesters</option>
@@ -204,7 +202,7 @@ const MarksView = () => {
             ))}
           </select>
 
-          {/* Exam Session Filter */}
+          {/* Exam Session Selector */}
           <select
             value={selectedSession}
             onChange={(e) => setSelectedSession(e.target.value)}
@@ -220,7 +218,7 @@ const MarksView = () => {
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
+      {/* KPI Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 flex items-center gap-4">
           <div className="p-3 bg-teal-100 text-teal-700 rounded-xl">
@@ -266,7 +264,7 @@ const MarksView = () => {
         </div>
       </div>
 
-      {/* Results Table */}
+      {/* Breakdown Table */}
       <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100">
         <h2 className="text-lg font-bold text-gray-800 mb-4">
           Subject Marks Breakdown
@@ -336,10 +334,6 @@ const MarksView = () => {
                       <p className="font-semibold">
                         No published marks available yet for the selected
                         filters.
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        If marks were recently submitted, please ensure the
-                        Administrator has published the Exam Session.
                       </p>
                     </div>
                   </td>
