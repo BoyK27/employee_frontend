@@ -32,30 +32,63 @@ const MarksEntry = () => {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
-  // 1. Fetch Teacher's Assigned Classes & Active Semesters
+  // 1. Fetch Teacher's Assigned Classes on Mount
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const fetchClasses = async () => {
       try {
-        const [classRes, semRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/class/assigned`, { headers }),
-          axios.get(`${API_BASE_URL}/api/semester`, { headers }),
-        ]);
-
+        const classRes = await axios.get(`${API_BASE_URL}/api/class/assigned`, {
+          headers,
+        });
         if (classRes.data.success) {
           setClasses(classRes.data.classes || []);
         }
-        if (semRes.data.success) {
-          setSemesters(semRes.data.semesters || []);
-        }
       } catch (err) {
-        console.error("Error fetching initial dropdowns:", err);
+        console.error("Error fetching assigned classes:", err);
       }
     };
 
-    fetchInitialData();
+    fetchClasses();
   }, []);
 
-  // 2. Fetch Exam Sessions when Semester changes & reset session selection
+  // 2. Fetch Semesters & Subjects when Class changes
+  useEffect(() => {
+    setSelectedSemester("");
+    setSelectedSession("");
+    setSelectedSubject("");
+    setStudents([]);
+    setMarksMap({});
+
+    if (selectedClass) {
+      // Fetch Semesters for the selected class
+      axios
+        .get(`${API_BASE_URL}/api/semester/class/${selectedClass}`, { headers })
+        .then((res) => {
+          if (res.data.success) setSemesters(res.data.semesters || []);
+        })
+        .catch((err) => {
+          console.error("Error fetching class semesters:", err);
+          setSemesters([]);
+        });
+
+      // Fetch Subjects for the selected class
+      axios
+        .get(`${API_BASE_URL}/api/subject/assigned/${selectedClass}`, {
+          headers,
+        })
+        .then((res) => {
+          if (res.data.success) setSubjects(res.data.subjects || []);
+        })
+        .catch((err) => {
+          console.error("Error fetching class subjects:", err);
+          setSubjects([]);
+        });
+    } else {
+      setSemesters([]);
+      setSubjects([]);
+    }
+  }, [selectedClass]);
+
+  // 3. Fetch Exam Sessions when Semester changes
   useEffect(() => {
     setSelectedSession("");
     if (selectedSemester) {
@@ -73,31 +106,6 @@ const MarksEntry = () => {
       setSessions([]);
     }
   }, [selectedSemester]);
-
-  // 3. Fetch Assigned Subjects when Class changes & reset subject selection
-  useEffect(() => {
-    setSelectedSubject("");
-    setStudents([]);
-    setMarksMap({});
-
-    if (selectedClass) {
-      axios
-        .get(`${API_BASE_URL}/api/subject/assigned/${selectedClass}`, {
-          headers,
-        })
-        .then((res) => {
-          if (res.data.success) {
-            setSubjects(res.data.subjects || []);
-          }
-        })
-        .catch((err) => {
-          console.error("Error fetching assigned class subjects:", err);
-          setSubjects([]);
-        });
-    } else {
-      setSubjects([]);
-    }
-  }, [selectedClass]);
 
   // 4. Load Grid Marks Sheet
   const loadGrid = async () => {
@@ -241,7 +249,8 @@ const MarksEntry = () => {
           <select
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none"
+            disabled={!selectedClass}
+            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none disabled:opacity-50"
           >
             <option value="">Select Semester</option>
             {semesters.map((s) => (
