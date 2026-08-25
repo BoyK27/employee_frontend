@@ -1,56 +1,53 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { useAuth } from "../context/authContext";
 import {
   FaPrint,
-  FaAward,
-  FaLock,
-  FaSpinner,
-  FaGraduationCap,
-  FaExclamationCircle,
+  FaTrophy,
+  FaExclamationTriangle,
+  FaBookOpen,
 } from "react-icons/fa";
 
-const StudentReportCard = () => {
-  const { user } = useAuth();
-  const reportRef = useRef();
+const API_BASE_URL = "https://ems-backend-hazel.vercel.app/api";
 
+const StudentReportCard = () => {
   const [semesters, setSemesters] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState("");
+  const [selectedSemesterId, setSelectedSemesterId] = useState("");
   const [reportCard, setReportCard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch available semesters for student's class
-  useEffect(() => {
-    fetchAvailableSemesters();
-  }, [user]);
+  // Get current student user details from Auth Context / Local Storage
+  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
+  // Safely extract studentId across user payload schema variants
+  const studentId =
+    currentUser?.studentId?._id ||
+    currentUser?.studentId ||
+    currentUser?._id ||
+    currentUser?.id;
 
-  // Fetch report card when a semester is selected
   useEffect(() => {
-    if (selectedSemester && user?._id) {
-      fetchReportCard(selectedSemester);
-    }
-  }, [selectedSemester, user]);
+    fetchSemesters();
+  }, []);
 
-  const fetchAvailableSemesters = async () => {
+  const fetchSemesters = async () => {
     try {
-      const res = await axios.get(
-        `https://ems-backend-hazel.vercel.app/api/semester/student/${user?._id || user?.id}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
-      );
+      const token = localStorage.getItem("token");
+      const res = await axios.get(`${API_BASE_URL}/semester`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.data.success) {
-        setSemesters(res.data.semesters || []);
-        if (res.data.semesters?.length > 0) {
-          // Default to most recent semester
-          setSelectedSemester(res.data.semesters[0]._id);
-        }
+        setSemesters(res.data.semesters || res.data.data || []);
       }
     } catch (err) {
-      console.error("Error fetching semesters:", err);
+      setError("Failed to fetch academic semesters.");
     }
   };
+
+  useEffect(() => {
+    if (selectedSemesterId && studentId) {
+      fetchReportCard(selectedSemesterId);
+    }
+  }, [selectedSemesterId]);
 
   const fetchReportCard = async (semesterId) => {
     setLoading(true);
@@ -58,12 +55,10 @@ const StudentReportCard = () => {
     setReportCard(null);
 
     try {
-      const studentId = user?._id || user?.id;
+      const token = localStorage.getItem("token");
       const res = await axios.get(
-        `https://ems-backend-hazel.vercel.app/api/report-card/student/${studentId}/semester/${semesterId}`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        },
+        `${API_BASE_URL}/report-card/student/${studentId}/semester/${semesterId}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
 
       if (res.data.success) {
@@ -72,7 +67,7 @@ const StudentReportCard = () => {
     } catch (err) {
       setError(
         err.response?.data?.error ||
-          "Semester report card unavailable or not yet published.",
+          "Semester report card is currently unavailable or not published.",
       );
     } finally {
       setLoading(false);
@@ -84,28 +79,28 @@ const StudentReportCard = () => {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gray-100 min-h-screen">
-      {/* Top Selector & Action Bar (Hidden on Print) */}
-      <div className="max-w-4xl mx-auto mb-6 print:hidden flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+    <div className="p-6 max-w-5xl mx-auto space-y-6">
+      {/* Header Controls (Hidden during print) */}
+      <div className="bg-white p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <div>
-          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <FaGraduationCap className="text-teal-600" /> Academic Report Card
-          </h2>
-          <p className="text-xs text-gray-500">
-            Select an academic term to view official term results.
+          <h1 className="text-2xl font-bold text-gray-800">
+            My Academic Report Card
+          </h1>
+          <p className="text-gray-500 text-sm">
+            Select a semester to review published results.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4 w-full sm:w-auto">
           <select
-            value={selectedSemester}
-            onChange={(e) => setSelectedSemester(e.target.value)}
-            className="border border-gray-300 p-2 rounded-lg text-sm focus:ring-2 focus:ring-teal-500 bg-gray-50 font-medium"
+            value={selectedSemesterId}
+            onChange={(e) => setSelectedSemesterId(e.target.value)}
+            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 outline-none w-full sm:w-64"
           >
             <option value="">-- Select Semester --</option>
             {semesters.map((s) => (
               <option key={s._id} value={s._id}>
-                {s.name} ({s.academicYear})
+                {s.name || `Semester ${s.semesterNumber}`} ({s.academicYear})
               </option>
             ))}
           </select>
@@ -113,251 +108,163 @@ const StudentReportCard = () => {
           {reportCard && (
             <button
               onClick={handlePrint}
-              className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 shadow-sm transition"
+              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-semibold flex items-center gap-2 transition"
             >
-              <FaPrint /> Print Transcript
+              <FaPrint /> Print
             </button>
           )}
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="max-w-4xl mx-auto p-12 bg-white rounded-xl shadow-sm text-center text-gray-500 flex justify-center items-center gap-3">
-          <FaSpinner className="animate-spin text-teal-600 text-2xl" />
-          <span>Compiling Official Report Card...</span>
+      {/* Error / Unpublished State */}
+      {error && (
+        <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-lg shadow-sm flex items-start gap-3">
+          <FaExclamationTriangle className="text-amber-600 text-xl mt-0.5 flex-shrink-0" />
+          <div>
+            <h3 className="font-bold text-amber-800">Notice</h3>
+            <p className="text-amber-700 text-sm mt-1">{error}</p>
+          </div>
         </div>
       )}
 
-      {/* Locked / Error State */}
-      {!loading && error && (
-        <div className="max-w-md mx-auto my-12 p-6 bg-white rounded-xl shadow-md border-t-4 border-amber-500 text-center">
-          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-            <FaLock />
-          </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-1">
-            Report Card Unavailable
-          </h3>
-          <p className="text-sm text-gray-600 mb-4">{error}</p>
-          <span className="inline-block text-xs bg-gray-100 text-gray-500 px-3 py-1 rounded-full font-medium">
-            Contact Academic Administration
-          </span>
+      {/* Report Card Document View */}
+      {loading ? (
+        <div className="text-center py-16 bg-white rounded-lg shadow-md text-gray-500">
+          Compiling your official semester report card...
         </div>
-      )}
-
-      {/* Formal Printable Report Card Sheet */}
-      {!loading && reportCard && (
-        <div
-          ref={reportRef}
-          className="max-w-4xl mx-auto bg-white p-8 md:p-10 shadow-lg border border-gray-300 rounded-sm font-serif print:shadow-none print:p-0 print:border-none print:w-full"
-        >
-          {/* Header & Institutional Letterhead */}
-          <div className="border-b-4 border-double border-gray-900 pb-4 mb-6 text-center relative">
-            <div className="uppercase tracking-wider font-extrabold text-2xl text-gray-900">
-              EXCELLENCE ACADEMY HIGH SCHOOL
-            </div>
-            <p className="text-xs uppercase tracking-widest text-gray-600 font-sans mt-0.5">
-              Government Approved • Department of Secondary Education
-            </p>
-            <p className="text-xs italic text-gray-500 font-sans">
-              P.O. Box 1042, Bamenda, North West Region, Cameroon
-            </p>
-
-            <div className="mt-4 bg-gray-900 text-white py-1 uppercase text-sm font-sans font-bold tracking-widest rounded-xs">
-              OFFICIAL ACADEMIC TRANSCRIPT & REPORT CARD
-            </div>
-          </div>
-
-          {/* Student Profile Block */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 p-4 bg-gray-50 border border-gray-300 font-sans text-xs">
+      ) : reportCard ? (
+        <div className="bg-white p-8 rounded-lg shadow-lg space-y-6 border border-gray-100 print:shadow-none print:p-0 print:border-none">
+          {/* Printable Header */}
+          <div className="border-b-2 border-teal-600 pb-4 flex justify-between items-end">
             <div>
-              <span className="block text-gray-500 uppercase text-[10px] font-bold">
-                Student Name:
-              </span>
-              <span className="font-bold text-gray-900 text-sm">
-                {user?.name || "N/A"}
-              </span>
-            </div>
-            <div>
-              <span className="block text-gray-500 uppercase text-[10px] font-bold">
-                Registration No:
-              </span>
-              <span className="font-bold text-gray-900 text-sm">
-                {user?.registrationNumber || "STU-2026-004"}
-              </span>
-            </div>
-            <div>
-              <span className="block text-gray-500 uppercase text-[10px] font-bold">
-                Academic Session:
-              </span>
-              <span className="font-bold text-gray-900 text-sm">
-                {reportCard.academicYear}
-              </span>
-            </div>
-            <div>
-              <span className="block text-gray-500 uppercase text-[10px] font-bold">
-                Term / Semester:
-              </span>
-              <span className="font-bold text-gray-900 text-sm">
+              <h2 className="text-2xl font-black text-gray-800 uppercase tracking-wide">
+                Official Report Card
+              </h2>
+              <p className="text-teal-700 font-semibold">
                 {reportCard.semesterName}
+              </p>
+              <p className="text-xs text-gray-500">
+                Academic Year: {reportCard.academicYear}
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-xs uppercase text-gray-400 block font-bold">
+                Class Rank
+              </span>
+              <span className="text-2xl font-black text-teal-700 flex items-center justify-end gap-1">
+                <FaTrophy className="text-yellow-500 text-lg" />{" "}
+                {reportCard.positionRatio}
               </span>
             </div>
           </div>
 
-          {/* Results Table */}
-          <table className="w-full border-collapse border border-gray-900 font-sans text-xs mb-6">
-            <thead>
-              <tr className="bg-gray-200 text-gray-900 border-b border-gray-900 uppercase font-bold text-center">
-                <th className="border border-gray-900 p-2 text-left">
-                  Subject Title
-                </th>
-                <th className="border border-gray-900 p-2 w-20">Code</th>
-                <th className="border border-gray-900 p-2 w-28">
-                  Session Scores
-                </th>
-                <th className="border border-gray-900 p-2 w-24">
-                  Weighted (/20)
-                </th>
-                <th className="border border-gray-900 p-2 w-16">Grade</th>
-                <th className="border border-gray-900 p-2 text-left">
-                  Remarks
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {reportCard.subjects?.map((sub, index) => (
-                <tr
-                  key={index}
-                  className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
-                >
-                  <td className="border border-gray-800 p-2 font-semibold text-gray-900">
-                    {sub.subjectName}
-                  </td>
-                  <td className="border border-gray-800 p-2 text-center text-gray-600">
-                    {sub.subjectCode}
-                  </td>
-                  <td className="border border-gray-800 p-1 text-center font-mono text-[11px]">
-                    {sub.sessionBreakdown?.map((sb, i) => (
-                      <div key={i}>
-                        {sb.sessionName}: {sb.rawScore}/{sb.outOf}
-                      </div>
-                    ))}
-                  </td>
-                  <td className="border border-gray-800 p-2 text-center font-bold text-sm text-gray-900">
-                    {sub.finalSubjectMark}
-                  </td>
-                  <td className="border border-gray-800 p-2 text-center font-bold">
-                    <span
-                      className={`px-1.5 py-0.5 rounded text-[11px] ${
-                        sub.grade === "A"
-                          ? "bg-green-100 text-green-900"
-                          : sub.grade === "F"
-                            ? "bg-red-100 text-red-900"
-                            : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {sub.grade}
-                    </span>
-                  </td>
-                  <td className="border border-gray-800 p-2 text-gray-600 italic">
-                    {parseFloat(sub.finalSubjectMark) >= 16
-                      ? "Excellent Mastery"
-                      : parseFloat(sub.finalSubjectMark) >= 14
-                        ? "Very Good Performance"
-                        : parseFloat(sub.finalSubjectMark) >= 10
-                          ? "Satisfactory Pass"
-                          : "Needs Remedial Attention"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Academic Performance Summary Box */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans mb-8">
-            <div className="border border-gray-800 p-3 bg-teal-50/50 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-gray-600">
-                  Semester Overall Average
-                </p>
-                <p className="text-2xl font-black text-gray-900">
-                  {reportCard.overallAverage}
-                </p>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-bold uppercase text-gray-500">
-                  Status
-                </span>
-                <p className="text-xs font-bold text-green-700">PASS</p>
-              </div>
+          {/* Student Profile Overview */}
+          <div className="bg-gray-50 p-4 rounded-md grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <span className="text-gray-500 text-xs block">Student Name</span>
+              <span className="font-bold text-gray-800">{reportCard.name}</span>
             </div>
-
-            <div className="border border-gray-800 p-3 bg-amber-50/50 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-gray-600">
-                  Class Position / Rank
-                </p>
-                <p className="text-2xl font-black text-amber-900">
-                  {reportCard.rank}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs font-semibold text-amber-800">
-                  {reportCard.positionRatio}
-                </p>
-              </div>
+            <div>
+              <span className="text-gray-500 text-xs block">
+                Registration No.
+              </span>
+              <span className="font-bold text-gray-800">
+                {reportCard.registrationNumber || "N/A"}
+              </span>
             </div>
-
-            <div className="border border-gray-800 p-3 bg-gray-50 flex items-center justify-between">
-              <div>
-                <p className="text-[10px] uppercase font-bold text-gray-600">
-                  Overall Grade
-                </p>
-                <p className="text-2xl font-black text-gray-900">
-                  {reportCard.overallGrade}
-                </p>
-              </div>
-              <FaAward className="text-2xl text-amber-500" />
+            <div>
+              <span className="text-gray-500 text-xs block">
+                Overall Average
+              </span>
+              <span className="font-bold text-teal-700">
+                {reportCard.overallAverage} / 20
+              </span>
+            </div>
+            <div>
+              <span className="text-gray-500 text-xs block">Final Grade</span>
+              <span className="font-bold text-blue-700">
+                {reportCard.overallGrade}
+              </span>
             </div>
           </div>
 
-          {/* Grading System Key & Signatures */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans text-xs pt-4 border-t border-gray-300">
-            {/* Legend */}
-            <div>
-              <p className="font-bold text-gray-800 uppercase mb-1 text-[10px]">
-                Grading Key (/20 Scale):
-              </p>
-              <div className="grid grid-cols-2 gap-x-2 text-[11px] text-gray-600">
-                <span>16 - 20: Grade A (Excellent)</span>
-                <span>14 - 15.9: Grade B (Very Good)</span>
-                <span>12 - 13.9: Grade C (Good)</span>
-                <span>10 - 11.9: Grade D (Pass)</span>
-                <span className="col-span-2 text-red-600">
-                  Below 10.0: Grade F (Fail)
-                </span>
-              </div>
+          {/* Marks & Subjects Table */}
+          <div className="space-y-2">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-md">
+              <FaBookOpen className="text-teal-600" /> Academic Performance
+              Breakdown
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse border border-gray-200 text-sm">
+                <thead>
+                  <tr className="bg-teal-700 text-white text-xs font-semibold uppercase">
+                    <th className="p-3 border">Subject</th>
+                    <th className="p-3 border text-center">Code</th>
+                    <th className="p-3 border">Session Breakdown</th>
+                    <th className="p-3 border text-center">
+                      Final Score (/20)
+                    </th>
+                    <th className="p-3 border text-center">Grade</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y text-xs">
+                  {reportCard.subjects.map((sub, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="p-3 border font-semibold text-gray-800">
+                        {sub.subjectName}
+                      </td>
+                      <td className="p-3 border text-center text-gray-500">
+                        {sub.subjectCode}
+                      </td>
+                      <td className="p-3 border space-y-1">
+                        {sub.sessionBreakdown.map((sb, sIdx) => (
+                          <div
+                            key={sIdx}
+                            className="flex justify-between text-[11px] text-gray-600"
+                          >
+                            <span>
+                              {sb.sessionName} ({sb.weight}%):
+                            </span>
+                            <span className="font-mono">
+                              {sb.normalizedScore} / 20
+                            </span>
+                          </div>
+                        ))}
+                      </td>
+                      <td className="p-3 border text-center font-bold text-teal-700 text-sm">
+                        {sub.finalSubjectMark}
+                      </td>
+                      <td className="p-3 border text-center font-bold text-blue-800 text-sm">
+                        {sub.grade}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
 
-            {/* Signature Blocks */}
-            <div className="flex justify-between items-end pt-6 md:pt-0">
-              <div className="text-center">
-                <div className="w-32 border-b border-gray-800 mb-1"></div>
-                <p className="text-[10px] uppercase font-bold text-gray-600">
-                  Class Master
-                </p>
-              </div>
-
-              <div className="text-center">
-                <div className="w-32 border-b border-gray-800 mb-1"></div>
-                <p className="text-[10px] uppercase font-bold text-gray-600">
-                  Principal Signature & Stamp
-                </p>
-              </div>
+          {/* Footer Sign-off */}
+          <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs text-gray-500 border-t">
+            <div>
+              <p className="font-semibold text-gray-700">
+                Class Delegate / Coordinator
+              </p>
+              <div className="mt-8 border-b border-gray-300 w-3/4 mx-auto"></div>
+            </div>
+            <div>
+              <p className="font-semibold text-gray-700">
+                Head of Department / Administration
+              </p>
+              <div className="mt-8 border-b border-gray-300 w-3/4 mx-auto"></div>
             </div>
           </div>
         </div>
-      )}
+      ) : !selectedSemesterId ? (
+        <div className="text-center py-16 bg-white rounded-lg shadow-md text-gray-500">
+          Please select a semester from the dropdown to view your report card.
+        </div>
+      ) : null}
     </div>
   );
 };
