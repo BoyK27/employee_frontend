@@ -18,82 +18,122 @@ const MarksView = () => {
     totalSubjects: 0,
   });
 
-  const [semesters, setSemesters] = useState([]); // 👈 Semesters state
+  const [semesters, setSemesters] = useState([]);
   const [sessions, setSessions] = useState([]);
-  const [selectedSemester, setSelectedSemester] = useState("all"); // 👈 Selected semester filter
+  const [selectedSemester, setSelectedSemester] = useState("all");
   const [selectedSession, setSelectedSession] = useState("all");
   const [loading, setLoading] = useState(true);
+
+  // Helper to fetch authorization headers
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return { Authorization: `Bearer ${token}` };
+  };
 
   // 1. Fetch Semesters and Exam Sessions on mount
   useEffect(() => {
     const fetchDropdowns = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const headers = { Authorization: `Bearer ${token}` };
-
+        const headers = getAuthHeaders();
         const [semRes, sessRes] = await Promise.all([
           axios.get(`${API_BASE_URL}/api/semester`, { headers }),
           axios.get(`${API_BASE_URL}/api/exam-session`, { headers }),
         ]);
 
         if (semRes.data?.success) {
-          setSemesters(semRes.data.semesters || []);
+          setSemesters(semRes.data.semesters || semRes.data.data || []);
         }
 
         if (sessRes.data?.success) {
-          const published = (sessRes.data.sessions || []).filter(
-            (s) => s.isPublished,
-          );
+          const allSessions = sessRes.data.sessions || sessRes.data.data || [];
+          const published = allSessions.filter((s) => s.isPublished);
           setSessions(published);
         }
       } catch (err) {
-        console.error("Error fetching dropdown options:", err);
+        console.error("[MarksView] Error fetching dropdown options:", err);
       }
     };
 
     fetchDropdowns();
   }, []);
 
-  // 2. Fetch Student Report when selectedSemester, selectedSession, or student profile changes
+  // 2. Fetch Student Report when filters or target student change
   useEffect(() => {
     const fetchStudentReport = async () => {
-      const token = localStorage.getItem("token");
-
-      let localUser = {};
-      try {
-        localUser = JSON.parse(localStorage.getItem("user") || "{}");
-      } catch (e) {
-        console.error("Error parsing user from localStorage", e);
-      }
-
-      const studentIdentifier =
-        urlStudentId || user?._id || user?.id || localUser._id || localUser.id;
-
-      if (!studentIdentifier) {
-        console.warn("[MarksView] Waiting for student identifier...");
-        return;
-      }
-
       setLoading(true);
+
       try {
-        const res = await axios.get(
-          `${API_BASE_URL}/api/mark/student/${studentIdentifier}/${selectedSession}?semesterId=${selectedSemester}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        );
+        const headers = getAuthHeaders();
+        let targetStudentId = urlStudentId;
+
+        // If URL doesn't supply a student ID, resolve target ID from auth context or profile endpoint
+        if (!targetStudentId) {
+          let localUser = {};
+          try {
+            localUser = JSON.parse(localStorage.getItem("user") || "{}");
+          } catch (e) {
+            console.error("[MarksView] Error parsing local storage user", e);
+          }
+
+          const currentUserId =
+            user?._id || user?.id || localUser._id || localUser.id;
+
+          if (currentUserId) {
+            // Attempt to resolve Student record ID associated with User account
+            try {
+              const studentProfileRes = await axios.get(
+                `${API_BASE_URL}/api/student/user/${currentUserId}`,
+                { headers },
+              );
+              if (
+                studentProfileRes.data?.success &&
+                studentProfileRes.data.student
+              ) {
+                targetStudentId = studentProfileRes.data.student._id;
+              } else {
+                targetStudentId = currentUserId;
+              }
+            } catch (err) {
+              // Fallback to raw user ID if standalone lookup endpoint is absent
+              targetStudentId = currentUserId;
+            }
+          }
+        }
+
+        if (!targetStudentId) {
+          console.warn("[MarksView] Missing valid student identifier.");
+          setLoading(false);
+          return;
+        }
+
+        // Build request parameters
+        const queryParams = new URLSearchParams();
+        if (selectedSemester !== "all") {
+          queryParams.append("semesterId", selectedSemester);
+        }
+
+        const endpoint = `${API_BASE_URL}/api/mark/student/${targetStudentId}/${selectedSession}?${queryParams.toString()}`;
+        const res = await axios.get(endpoint, { headers });
 
         if (res.data?.success) {
+          const marksList = res.data.marks || [];
+          const computedTotalScore =
+            res.data.totalScore ??
+            marksList.reduce((acc, m) => acc + (m.score || m.mark || 0), 0);
+
           setReport({
-            marks: res.data.marks || [],
-            totalScore: res.data.totalScore || 0,
+            marks: marksList,
+            totalScore: parseFloat(computedTotalScore.toFixed(2)),
             average: res.data.average || "0.00",
             totalSubjects:
-              res.data.totalSubjects || res.data.marks?.length || 0,
+              res.data.totalSubjects ||
+              new Set(marksList.map((m) => m.subjectId?._id || m.subjectId))
+                .size ||
+              marksList.length,
           });
         }
       } catch (err) {
-        console.error("Error fetching student marks report:", err);
+        console.error("[MarksView] Error fetching student marks report:", err);
       } finally {
         setLoading(false);
       }
@@ -102,9 +142,9 @@ const MarksView = () => {
     fetchStudentReport();
   }, [selectedSemester, selectedSession, urlStudentId, user]);
 
-  // Dynamic scale computations
+  // Dynamic score scale calculations
   const maxPossibleScore = report.marks.reduce(
-    (acc, m) => acc + (m.outOf || 20),
+    (acc, m) => acc + (m.outOf || m.maxScore || 20),
     0,
   );
 
@@ -126,32 +166,34 @@ const MarksView = () => {
           </p>
         </div>
 
-        {/* Filters */}
+        {/* Filter Selectors */}
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          {/* Semester Selector */}
+          {/* Semester Filter */}
           <select
             value={selectedSemester}
             onChange={(e) => setSelectedSemester(e.target.value)}
-            className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer"
+            className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer text-sm"
           >
             <option value="all">All Semesters</option>
             {semesters.map((sem) => (
               <option key={sem._id} value={sem._id}>
-                {sem.name || sem.semesterName}
+                {sem.name ||
+                  sem.semesterName ||
+                  `Semester ${sem.semesterNumber}`}
               </option>
             ))}
           </select>
 
-          {/* Session Selector */}
+          {/* Exam Session Filter */}
           <select
             value={selectedSession}
             onChange={(e) => setSelectedSession(e.target.value)}
-            className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer"
+            className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer text-sm"
           >
             <option value="all">All Published Sessions</option>
             {sessions.map((s) => (
               <option key={s._id} value={s._id}>
-                {s.sessionName}
+                {s.sessionName || s.name}
               </option>
             ))}
           </select>
@@ -239,10 +281,16 @@ const MarksView = () => {
                     className="border-b border-gray-100 hover:bg-teal-50/20 transition-colors"
                   >
                     <td className="p-3 font-semibold text-gray-800">
-                      {m.subjectId?.name || m.subjectId?.subjectName || "N/A"}
+                      {m.subjectId?.subjectName ||
+                        m.subjectId?.name ||
+                        m.subjectName ||
+                        "N/A"}
                     </td>
-                    <td className="p-3 font-mono text-xs">
-                      {m.subjectId?.code || m.subjectId?.subjectCode || "N/A"}
+                    <td className="p-3 font-mono text-xs text-gray-600">
+                      {m.subjectId?.subjectCode ||
+                        m.subjectId?.code ||
+                        m.subjectCode ||
+                        "N/A"}
                     </td>
                     <td className="p-3 font-medium text-gray-600">
                       {m.semesterId?.name ||
@@ -250,12 +298,12 @@ const MarksView = () => {
                         "N/A"}
                     </td>
                     <td className="p-3 font-medium text-gray-600">
-                      {m.examSessionId?.sessionName || "N/A"}
+                      {m.examSessionId?.sessionName || m.sessionName || "N/A"}
                     </td>
                     <td className="p-3 text-center font-bold text-teal-700 text-lg">
-                      {m.score}{" "}
+                      {m.score ?? m.mark ?? 0}{" "}
                       <span className="text-sm font-medium text-gray-500">
-                        / {m.outOf || 20}
+                        / {m.outOf || m.maxScore || 20}
                       </span>
                     </td>
                   </tr>
