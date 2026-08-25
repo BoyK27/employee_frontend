@@ -6,7 +6,6 @@ import {
   FaTrophy,
   FaBook,
   FaLock,
-  FaCalendarAlt,
   FaPrint,
 } from "react-icons/fa";
 
@@ -21,12 +20,10 @@ const StudentReportCard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Load available semesters on mount
   useEffect(() => {
     fetchSemesters();
   }, []);
 
-  // Automatically fetch report card when selected semester changes
   useEffect(() => {
     if (selectedSemesterId && studentId) {
       fetchStudentReportCard(selectedSemesterId);
@@ -48,7 +45,6 @@ const StudentReportCard = () => {
         const list = res.data.semesters || res.data.data || [];
         setSemesters(list);
         if (list.length > 0) {
-          // Default to the first available semester
           setSelectedSemesterId(list[0]._id);
         }
       }
@@ -99,21 +95,23 @@ const StudentReportCard = () => {
   };
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6 print:p-0 print:max-w-none">
       {/* Header & Controls */}
-      <div className="bg-white p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="bg-white p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:shadow-none print:border-b">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <FaGraduationCap className="text-teal-600" /> My Academic Report
-            Cards
+            <FaGraduationCap className="text-teal-600 print:hidden" /> Academic
+            Report Card
           </h1>
           <p className="text-gray-500 text-sm">
-            View compiled grades, subject breakdowns, and semester ranks.
+            {reportCard
+              ? `${reportCard.semesterName || "Semester"} - ${reportCard.academicYear || ""}`
+              : "View compiled grades, subject breakdowns, and semester ranks."}
           </p>
         </div>
 
         {/* Semester Dropdown & Print Button */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex items-center gap-3 w-full sm:w-auto print:hidden">
           <select
             value={selectedSemesterId}
             onChange={(e) => setSelectedSemesterId(e.target.value)}
@@ -140,7 +138,7 @@ const StudentReportCard = () => {
 
       {/* Notifications */}
       {error && (
-        <div className="p-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-md flex items-center gap-3 text-sm">
+        <div className="p-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-md flex items-center gap-3 text-sm print:hidden">
           <FaLock className="text-amber-600 text-lg flex-shrink-0" />
           <span>{error}</span>
         </div>
@@ -155,8 +153,7 @@ const StudentReportCard = () => {
         <div className="space-y-6">
           {/* Overview Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Student Info */}
-            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-teal-500">
+            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-teal-500 print:shadow-none print:border">
               <span className="text-xs text-gray-500 uppercase font-semibold">
                 Student Name
               </span>
@@ -168,8 +165,7 @@ const StudentReportCard = () => {
               </p>
             </div>
 
-            {/* Overall Average */}
-            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500 flex justify-between items-center">
+            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500 flex justify-between items-center print:shadow-none print:border">
               <div>
                 <span className="text-xs text-gray-500 uppercase font-semibold">
                   Semester Average
@@ -183,8 +179,7 @@ const StudentReportCard = () => {
               </span>
             </div>
 
-            {/* Class Rank */}
-            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-yellow-500 flex justify-between items-center">
+            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-yellow-500 flex justify-between items-center print:shadow-none print:border">
               <div>
                 <span className="text-xs text-gray-500 uppercase font-semibold">
                   Class Position
@@ -193,15 +188,15 @@ const StudentReportCard = () => {
                   {reportCard.positionRatio || `#${reportCard.rank}`}
                 </h3>
               </div>
-              <FaTrophy className="text-yellow-500 text-3xl" />
+              <FaTrophy className="text-yellow-500 text-3xl print:hidden" />
             </div>
           </div>
 
           {/* Subject Breakdown Table */}
-          <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+          <div className="bg-white rounded-lg shadow-md p-6 space-y-4 print:shadow-none print:p-0">
             <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-              <FaBook className="text-teal-600" /> Subject Grades & Evaluation
-              Breakdown
+              <FaBook className="text-teal-600 print:hidden" /> Subject Grades &
+              Evaluation Breakdown
             </h2>
 
             <div className="overflow-x-auto">
