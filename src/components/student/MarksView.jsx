@@ -72,7 +72,8 @@ const MarksView = () => {
 
         if (sessRes.data?.success) {
           const allSessions = sessRes.data.sessions || sessRes.data.data || [];
-          const published = allSessions.filter((s) => s.isPublished);
+          const published = allSessions.filter((s) => s.isPublished !== false);
+
           setSessions(published);
         }
       } catch (err) {
