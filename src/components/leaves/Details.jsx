@@ -42,7 +42,7 @@ const Details = () => {
         },
       );
       if (response.data.success) {
-        navigate(-1); // Returns safely to whichever leave table user came from
+        navigate(-1);
       }
     } catch (error) {
       if (error.response && !error.response.data.success) {
@@ -51,7 +51,7 @@ const Details = () => {
     }
   };
 
-  // Safe checks for Employee or Student model profile
+  // Safe reference resolution for employee or student leave records
   const profile = leave?.employeeId || leave?.studentId;
   const isStudent = Boolean(leave?.studentId);
 
@@ -64,6 +64,7 @@ const Details = () => {
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            {/* Image Section */}
             <div className="flex justify-center">
               <img
                 src={
@@ -75,6 +76,7 @@ const Details = () => {
               />
             </div>
 
+            {/* Information Section */}
             <div className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:space-x-3 border-b border-gray-100 pb-2">
                 <p className="text-gray-500 font-bold w-32">Name:</p>
