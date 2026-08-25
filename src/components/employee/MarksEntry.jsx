@@ -74,15 +74,22 @@ const MarksEntry = () => {
     }
   }, [selectedSemester]);
 
-  // 3. Fetch Subjects when Class changes
+  // 3. Fetch Subjects when Class changes (Assigned to logged-in teacher)
   useEffect(() => {
     if (selectedClass) {
       axios
-        .get(`${API_BASE_URL}/api/subject/class/${selectedClass}`, { headers })
-        .then((res) => {
-          if (res.data.success) setSubjects(res.data.subjects || []);
+        .get(`${API_BASE_URL}/api/subject/assigned/${selectedClass}`, {
+          headers,
         })
-        .catch((err) => console.error("Error fetching class subjects:", err));
+        .then((res) => {
+          if (res.data.success) {
+            setSubjects(res.data.subjects || []);
+          }
+        })
+        .catch((err) => {
+          console.error("Error fetching assigned class subjects:", err);
+          setSubjects([]);
+        });
     } else {
       setSubjects([]);
     }
