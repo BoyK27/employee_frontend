@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
-import { useAuth } from "../../context/authContext";
+import { useAuth } from "../context/authContext";
 import {
   FaPrint,
   FaAward,
