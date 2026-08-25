@@ -40,7 +40,8 @@ import ViewStudent from "./components/student/View";
 import EditStudent from "./components/student/Edit";
 
 // Leave Components (Employee)
-import LeaveList from "./components/leaves/List";
+import LeaveTable from "./components/leaves/Table"; // Use Table for Admin All-Leaves View
+import LeaveList from "./components/leaves/List"; // Use List for Individual User History
 import AddLeave from "./components/leaves/Add";
 import LeaveDetail from "./components/leaves/Details";
 
@@ -101,6 +102,8 @@ function App() {
           <Route path="add-employee" element={<AddEmployee />} />
           <Route path="employees/:id" element={<ViewEmployee />} />
           <Route path="employees/edit/:id" element={<EditEmployee />} />
+          {/* FIX 1: Add individual employee leave route for Manage Employees Action */}
+          <Route path="employees/leave/:id" element={<LeaveList />} />
 
           {/* Student Management */}
           <Route path="students" element={<StudentList />} />
@@ -109,7 +112,8 @@ function App() {
           <Route path="students/edit/:id" element={<EditStudent />} />
 
           {/* Employee Leaves */}
-          <Route path="leaves" element={<LeaveList />} />
+          {/* FIX 2: Point "leaves" to LeaveTable so Admin views all submitted leaves */}
+          <Route path="leaves" element={<LeaveTable />} />
           <Route path="leaves/:id" element={<LeaveDetail />} />
 
           {/* Student Leaves */}
@@ -174,7 +178,6 @@ function App() {
           <Route path="results" element={<MarksView />} />
           <Route path="results/:id" element={<MarksView />} />
 
-          {/* Matches /student-dashboard/report-cards/:studentId from StudentSidebar */}
           <Route
             path="report-cards/:studentId"
             element={<StudentReportCard />}
