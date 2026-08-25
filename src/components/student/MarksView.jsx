@@ -17,39 +17,48 @@ const MarksView = () => {
     average: "0.00",
     totalSubjects: 0,
   });
+
+  const [semesters, setSemesters] = useState([]); // 👈 Semesters state
   const [sessions, setSessions] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState("all"); // 👈 Selected semester filter
   const [selectedSession, setSelectedSession] = useState("all");
   const [loading, setLoading] = useState(true);
 
-  // 1. Fetch published sessions once on component mount
+  // 1. Fetch Semesters and Exam Sessions on mount
   useEffect(() => {
-    const fetchSessions = async () => {
+    const fetchDropdowns = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await axios.get(`${API_BASE_URL}/api/exam-session`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const headers = { Authorization: `Bearer ${token}` };
 
-        if (res.data?.success) {
-          const published = (res.data.sessions || []).filter(
+        const [semRes, sessRes] = await Promise.all([
+          axios.get(`${API_BASE_URL}/api/semester`, { headers }),
+          axios.get(`${API_BASE_URL}/api/exam-session`, { headers }),
+        ]);
+
+        if (semRes.data?.success) {
+          setSemesters(semRes.data.semesters || []);
+        }
+
+        if (sessRes.data?.success) {
+          const published = (sessRes.data.sessions || []).filter(
             (s) => s.isPublished,
           );
           setSessions(published);
         }
       } catch (err) {
-        console.error("Error fetching exam sessions:", err);
+        console.error("Error fetching dropdown options:", err);
       }
     };
 
-    fetchSessions();
+    fetchDropdowns();
   }, []);
 
-  // 2. Fetch Student Report when session or student profile changes
+  // 2. Fetch Student Report when selectedSemester, selectedSession, or student profile changes
   useEffect(() => {
     const fetchStudentReport = async () => {
       const token = localStorage.getItem("token");
 
-      // Safely pull user from localStorage or AuthContext fallback
       let localUser = {};
       try {
         localUser = JSON.parse(localStorage.getItem("user") || "{}");
@@ -68,7 +77,7 @@ const MarksView = () => {
       setLoading(true);
       try {
         const res = await axios.get(
-          `${API_BASE_URL}/api/mark/student/${studentIdentifier}/${selectedSession}`,
+          `${API_BASE_URL}/api/mark/student/${studentIdentifier}/${selectedSession}?semesterId=${selectedSemester}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
@@ -91,16 +100,14 @@ const MarksView = () => {
     };
 
     fetchStudentReport();
-  }, [selectedSession, urlStudentId, user]);
+  }, [selectedSemester, selectedSession, urlStudentId, user]);
 
-  // 🚀 DYNAMIC SCALE COMPUTATIONS:
-  // Dynamically sum maximum possible scores across all fetched subjects
+  // Dynamic scale computations
   const maxPossibleScore = report.marks.reduce(
     (acc, m) => acc + (m.outOf || 20),
     0,
   );
 
-  // Calculate normalized base-20 overall average accurately based on dynamic outOf values
   const calculatedNormalizedAverage =
     maxPossibleScore > 0
       ? ((report.totalScore / maxPossibleScore) * 20).toFixed(2)
@@ -115,21 +122,40 @@ const MarksView = () => {
             <GraduationCap className="h-7 w-7" /> Academic Results
           </h1>
           <p className="text-teal-100 text-sm">
-            View published examination scores & grades
+            View published examination scores & grades by semester and session
           </p>
         </div>
-        <select
-          value={selectedSession}
-          onChange={(e) => setSelectedSession(e.target.value)}
-          className="w-full md:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer"
-        >
-          <option value="all">All Published Sessions</option>
-          {sessions.map((s) => (
-            <option key={s._id} value={s._id}>
-              {s.sessionName}
-            </option>
-          ))}
-        </select>
+
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          {/* Semester Selector */}
+          <select
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer"
+          >
+            <option value="all">All Semesters</option>
+            {semesters.map((sem) => (
+              <option key={sem._id} value={sem._id}>
+                {sem.name || sem.semesterName}
+              </option>
+            ))}
+          </select>
+
+          {/* Session Selector */}
+          <select
+            value={selectedSession}
+            onChange={(e) => setSelectedSession(e.target.value)}
+            className="w-full sm:w-auto p-2.5 bg-teal-700 text-white rounded-lg border border-teal-500 font-semibold outline-none focus:ring-2 focus:ring-teal-300 cursor-pointer"
+          >
+            <option value="all">All Published Sessions</option>
+            {sessions.map((s) => (
+              <option key={s._id} value={s._id}>
+                {s.sessionName}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Summary KPI Cards */}
@@ -189,6 +215,7 @@ const MarksView = () => {
               <tr className="border-b border-gray-200 text-gray-500 text-sm uppercase bg-gray-50">
                 <th className="p-3">Subject</th>
                 <th className="p-3">Code</th>
+                <th className="p-3">Semester</th>
                 <th className="p-3">Exam Session</th>
                 <th className="p-3 text-center">Score Ratio</th>
               </tr>
@@ -196,7 +223,7 @@ const MarksView = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="text-center p-8 text-gray-500">
+                  <td colSpan="5" className="text-center p-8 text-gray-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Loader2 className="w-7 h-7 text-teal-600 animate-spin" />
                       <p className="text-sm font-semibold">
@@ -218,6 +245,11 @@ const MarksView = () => {
                       {m.subjectId?.code || m.subjectId?.subjectCode || "N/A"}
                     </td>
                     <td className="p-3 font-medium text-gray-600">
+                      {m.semesterId?.name ||
+                        m.semesterId?.semesterName ||
+                        "N/A"}
+                    </td>
+                    <td className="p-3 font-medium text-gray-600">
                       {m.examSessionId?.sessionName || "N/A"}
                     </td>
                     <td className="p-3 text-center font-bold text-teal-700 text-lg">
@@ -230,11 +262,12 @@ const MarksView = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="4" className="text-center p-8 text-gray-500">
+                  <td colSpan="5" className="text-center p-8 text-gray-500">
                     <div className="flex flex-col items-center gap-2">
                       <EyeOff className="w-8 h-8 text-gray-400" />
                       <p className="font-semibold">
-                        No published marks available yet.
+                        No published marks available yet for the selected
+                        filters.
                       </p>
                       <p className="text-xs text-gray-400">
                         If marks were recently submitted, please ensure the

@@ -13,12 +13,14 @@ const API_BASE_URL =
 
 const MarksEntry = () => {
   const [classes, setClasses] = useState([]);
-  const [subjects, setSubjects] = useState([]);
+  const [semesters, setSemesters] = useState([]); // 👈 Semesters state
   const [sessions, setSessions] = useState([]);
+  const [subjects, setSubjects] = useState([]);
 
   const [selectedClass, setSelectedClass] = useState("");
-  const [selectedSubject, setSelectedSubject] = useState("");
+  const [selectedSemester, setSelectedSemester] = useState(""); // 👈 Selected Semester
   const [selectedSession, setSelectedSession] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
   const [outOf, setOutOf] = useState(20);
 
   const [students, setStudents] = useState([]);
@@ -30,22 +32,49 @@ const MarksEntry = () => {
   const token = localStorage.getItem("token");
   const headers = { Authorization: `Bearer ${token}` };
 
+  // 1. Fetch Teacher's Assigned Classes & Active Semesters
   useEffect(() => {
-    const fetchDropdowns = async () => {
+    const fetchInitialData = async () => {
       try {
-        const [clsRes, sessRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/class`, { headers }),
-          axios.get(`${API_BASE_URL}/api/exam-session`, { headers }),
+        const [classRes, semRes] = await Promise.all([
+          // Adjust endpoint to fetch assigned classes for the logged-in teacher
+          axios.get(`${API_BASE_URL}/api/class/assigned`, { headers }),
+          axios.get(`${API_BASE_URL}/api/semester`, { headers }),
         ]);
-        if (clsRes.data.success) setClasses(clsRes.data.classes || []);
-        if (sessRes.data.success) setSessions(sessRes.data.sessions || []);
+
+        if (classRes.data.success) {
+          setClasses(classRes.data.classes || []);
+        }
+        if (semRes.data.success) {
+          setSemesters(semRes.data.semesters || []);
+        }
       } catch (err) {
-        console.error("Error loading dropdown data:", err);
+        console.error("Error fetching initial dropdowns:", err);
       }
     };
-    fetchDropdowns();
+
+    fetchInitialData();
   }, []);
 
+  // 2. Fetch Exam Sessions when Semester changes
+  useEffect(() => {
+    if (selectedSemester) {
+      axios
+        .get(`${API_BASE_URL}/api/exam-session/semester/${selectedSemester}`, {
+          headers,
+        })
+        .then((res) => {
+          if (res.data.success) setSessions(res.data.sessions || []);
+        })
+        .catch((err) =>
+          console.error("Error fetching semester sessions:", err),
+        );
+    } else {
+      setSessions([]);
+    }
+  }, [selectedSemester]);
+
+  // 3. Fetch Subjects when Class changes
   useEffect(() => {
     if (selectedClass) {
       axios
@@ -59,48 +88,46 @@ const MarksEntry = () => {
     }
   }, [selectedClass]);
 
+  // 4. Load Grid Marks Sheet
   const loadGrid = async () => {
     setErrorMsg("");
-    if (!selectedClass || !selectedSubject || !selectedSession) {
-      alert("Please select Class, Subject, and Session first!");
+    if (
+      !selectedClass ||
+      !selectedSemester ||
+      !selectedSession ||
+      !selectedSubject
+    ) {
+      alert("Please select Class, Semester, Session, and Subject first!");
       return;
     }
 
     setLoadingGrid(true);
     try {
       const res = await axios.get(
-        `${API_BASE_URL}/api/mark/class-subject?classId=${selectedClass}&subjectId=${selectedSubject}&examSessionId=${selectedSession}`,
+        `${API_BASE_URL}/api/mark/class-subject?classId=${selectedClass}&semesterId=${selectedSemester}&examSessionId=${selectedSession}&subjectId=${selectedSubject}`,
         { headers },
       );
-
-      console.log("[MarksEntry loadGrid Response]:", res.data);
 
       if (res.data.success) {
         const fetchedStudents = res.data.students || [];
         setStudents(fetchedStudents);
 
         if (fetchedStudents.length === 0) {
-          setErrorMsg(
-            "No students are enrolled/assigned to this selected Class.",
-          );
+          setErrorMsg("No students enrolled in this class.");
         }
 
         if (res.data.outOf) setOutOf(Number(res.data.outOf));
 
         const map = {};
         (res.data.marks || []).forEach((m) => {
-          // Map marks by student ID string
           const stId = m.studentId?._id || m.studentId;
           map[stId] = m.score;
         });
         setMarksMap(map);
       }
     } catch (err) {
-      console.error("Error loading marks grid:", err.response || err);
-      setErrorMsg(
-        err.response?.data?.error ||
-          "Failed to load student sheet from backend.",
-      );
+      console.error("Error loading marks grid:", err);
+      setErrorMsg(err.response?.data?.error || "Failed to load marks sheet.");
     } finally {
       setLoadingGrid(false);
     }
@@ -114,12 +141,13 @@ const MarksEntry = () => {
 
     const numScore = Number(rawValue);
     if (numScore > outOf) {
-      alert(`Score cannot exceed total marks (/${outOf})`);
+      alert(`Score cannot exceed max marks (/${outOf})`);
       return;
     }
     setMarksMap((prev) => ({ ...prev, [studentId]: rawValue }));
   };
 
+  // 5. Save Batch Marks Payload
   const handleSaveMarks = async () => {
     if (students.length === 0) return;
     setSaving(true);
@@ -133,9 +161,10 @@ const MarksEntry = () => {
 
       return {
         studentId: st._id,
-        subjectId: selectedSubject,
         classId: selectedClass,
+        semesterId: selectedSemester, // 👈 Pass Semester ID
         examSessionId: selectedSession,
+        subjectId: selectedSubject,
         score: Math.min(parsedScore, Number(outOf)),
         outOf: Number(outOf) || 20,
       };
@@ -151,8 +180,8 @@ const MarksEntry = () => {
         alert(`Marks saved successfully (Scale /${outOf})!`);
       }
     } catch (err) {
-      console.error("Error saving marks:", err.response?.data || err.message);
-      alert(err.response?.data?.error || "Failed to save marks");
+      console.error("Error saving marks:", err);
+      alert(err.response?.data?.error || "Failed to save marks.");
     } finally {
       setSaving(false);
     }
@@ -163,26 +192,28 @@ const MarksEntry = () => {
       <div className="bg-teal-600 text-white p-6 rounded-xl shadow-md flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2">
-            <FileSpreadsheet className="h-7 w-7" /> Marks Entry Portal
+            <FileSpreadsheet className="h-7 w-7" /> Teacher Marks Entry
           </h1>
           <p className="text-teal-100 text-sm">
-            Enter evaluation scores with precise max mark scales
+            Enter marks for assigned classes filtered by semester and evaluation
+            sessions
           </p>
         </div>
       </div>
 
-      {/* Selector Filters */}
-      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Selectors Grid */}
+      <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-5 gap-4">
+        {/* Assigned Class Dropdown */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1">
-            Select Class
+            Assigned Class
           </label>
           <select
             value={selectedClass}
             onChange={(e) => setSelectedClass(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50 outline-none"
+            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none"
           >
-            <option value="">Choose Class</option>
+            <option value="">Select Class</option>
             {classes.map((c) => (
               <option key={c._id} value={c._id}>
                 {c.className || c.name}
@@ -191,34 +222,37 @@ const MarksEntry = () => {
           </select>
         </div>
 
+        {/* Semester Dropdown */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1">
-            Select Subject
+            Semester
           </label>
           <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50 outline-none"
+            value={selectedSemester}
+            onChange={(e) => setSelectedSemester(e.target.value)}
+            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none"
           >
-            <option value="">Choose Subject</option>
-            {subjects.map((s) => (
+            <option value="">Select Semester</option>
+            {semesters.map((s) => (
               <option key={s._id} value={s._id}>
-                {s.subjectName || s.name}
+                {s.name || s.semesterName}
               </option>
             ))}
           </select>
         </div>
 
+        {/* Exam Session Dropdown */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1">
-            Exam Session
+            Evaluation Session
           </label>
           <select
             value={selectedSession}
             onChange={(e) => setSelectedSession(e.target.value)}
-            className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 bg-gray-50 outline-none"
+            disabled={!selectedSemester}
+            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none disabled:opacity-50"
           >
-            <option value="">Choose Evaluation Session</option>
+            <option value="">Select Session</option>
             {sessions.map((se) => (
               <option key={se._id} value={se._id}>
                 {se.sessionName}
@@ -227,24 +261,45 @@ const MarksEntry = () => {
           </select>
         </div>
 
+        {/* Subject Dropdown */}
+        <div>
+          <label className="block text-sm font-semibold text-gray-600 mb-1">
+            Subject
+          </label>
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value)}
+            disabled={!selectedClass}
+            className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none disabled:opacity-50"
+          >
+            <option value="">Select Subject</option>
+            {subjects.map((s) => (
+              <option key={s._id} value={s._id}>
+                {s.subjectName || s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Scale Base Mark */}
         <div>
           <label className="block text-sm font-semibold text-gray-600 mb-1 flex items-center gap-1">
-            <Target className="w-4 h-4 text-teal-600" /> Evaluation Base Mark
+            <Target className="w-4 h-4 text-teal-600" /> Max Score
           </label>
           <select
             value={outOf}
             onChange={(e) => setOutOf(Number(e.target.value))}
-            className="w-full p-2.5 border border-teal-500 bg-teal-50 font-bold text-teal-800 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none"
+            className="w-full p-2.5 border border-teal-500 bg-teal-50 font-bold text-teal-800 rounded-lg outline-none"
           >
-            <option value={20}>Score / 20</option>
-            <option value={30}>Score / 30</option>
-            <option value={40}>Score / 40</option>
-            <option value={50}>Score / 50</option>
-            <option value={100}>Score / 100</option>
+            <option value={20}>/ 20</option>
+            <option value={30}>/ 30</option>
+            <option value={40}>/ 40</option>
+            <option value={50}>/ 50</option>
+            <option value={100}>/ 100</option>
           </select>
         </div>
 
-        <div className="md:col-span-4 pt-2">
+        <div className="md:col-span-5 pt-2">
           <button
             onClick={loadGrid}
             disabled={loadingGrid}
@@ -253,7 +308,7 @@ const MarksEntry = () => {
             {loadingGrid ? (
               <>
                 <Loader2 className="w-5 h-5 animate-spin" />
-                Loading Sheet...
+                Loading Grid...
               </>
             ) : (
               "Load Student Sheet"
@@ -262,7 +317,7 @@ const MarksEntry = () => {
         </div>
       </div>
 
-      {/* Error / Empty Notification Banner */}
+      {/* Error Message */}
       {errorMsg && (
         <div className="p-4 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
@@ -270,7 +325,7 @@ const MarksEntry = () => {
         </div>
       )}
 
-      {/* Marks Sheet Table */}
+      {/* Table Section */}
       {students.length > 0 && (
         <div className="bg-white p-6 rounded-xl shadow-md border border-gray-100 space-y-4">
           <div className="flex justify-between items-center">
