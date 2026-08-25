@@ -30,34 +30,58 @@ const MarksView = () => {
     return { Authorization: `Bearer ${token}` };
   };
 
-  // 1. Fetch Semesters and Exam Sessions on mount
+  // 1. Fetch Semesters list on mount
   useEffect(() => {
-    const fetchDropdowns = async () => {
+    const fetchSemesters = async () => {
       try {
         const headers = getAuthHeaders();
-        const [semRes, sessRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/semester`, { headers }),
-          axios.get(`${API_BASE_URL}/api/exam-session`, { headers }),
-        ]);
+        const semRes = await axios.get(`${API_BASE_URL}/api/semester`, {
+          headers,
+        });
 
         if (semRes.data?.success) {
           setSemesters(semRes.data.semesters || semRes.data.data || []);
         }
+      } catch (err) {
+        console.error("[MarksView] Error fetching semesters:", err);
+      }
+    };
+
+    fetchSemesters();
+  }, []);
+
+  // 2. Dynamically fetch Exam Sessions whenever selectedSemester changes
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const headers = getAuthHeaders();
+        const queryParams = new URLSearchParams();
+        if (selectedSemester !== "all") {
+          queryParams.append("semesterId", selectedSemester);
+        }
+
+        const endpoint = `${API_BASE_URL}/api/exam-session?${queryParams.toString()}`;
+        const sessRes = await axios.get(endpoint, { headers });
 
         if (sessRes.data?.success) {
           const allSessions = sessRes.data.sessions || sessRes.data.data || [];
           const published = allSessions.filter((s) => s.isPublished);
           setSessions(published);
+
+          // Reset session filter if previously selected session isn't in the new list
+          if (!published.some((s) => s._id === selectedSession)) {
+            setSelectedSession("all");
+          }
         }
       } catch (err) {
-        console.error("[MarksView] Error fetching dropdown options:", err);
+        console.error("[MarksView] Error fetching sessions for semester:", err);
       }
     };
 
-    fetchDropdowns();
-  }, []);
+    fetchSessions();
+  }, [selectedSemester]);
 
-  // 2. Fetch Student Report when filters or target student change
+  // 3. Fetch Student Report when filters or target student change
   useEffect(() => {
     const fetchStudentReport = async () => {
       setLoading(true);
@@ -66,7 +90,6 @@ const MarksView = () => {
         const headers = getAuthHeaders();
         let targetStudentId = urlStudentId;
 
-        // If URL doesn't supply a student ID, resolve target ID from auth context or profile endpoint
         if (!targetStudentId) {
           let localUser = {};
           try {
@@ -79,7 +102,6 @@ const MarksView = () => {
             user?._id || user?.id || localUser._id || localUser.id;
 
           if (currentUserId) {
-            // Attempt to resolve Student record ID associated with User account
             try {
               const studentProfileRes = await axios.get(
                 `${API_BASE_URL}/api/student/user/${currentUserId}`,
@@ -94,7 +116,6 @@ const MarksView = () => {
                 targetStudentId = currentUserId;
               }
             } catch (err) {
-              // Fallback to raw user ID if standalone lookup endpoint is absent
               targetStudentId = currentUserId;
             }
           }
@@ -106,7 +127,6 @@ const MarksView = () => {
           return;
         }
 
-        // Build request parameters
         const queryParams = new URLSearchParams();
         if (selectedSemester !== "all") {
           queryParams.append("semesterId", selectedSemester);
