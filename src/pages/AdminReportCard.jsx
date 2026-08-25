@@ -69,7 +69,7 @@ const AdminReportCard = () => {
   const fetchClasses = async () => {
     try {
       const res = await axios.get(
-        "https://ems-backend-iota.vercel.app/api/class",
+        "https://ems-backend-hazel.vercel.app/api/class",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -83,7 +83,7 @@ const AdminReportCard = () => {
   const fetchExamSessions = async () => {
     try {
       const res = await axios.get(
-        "https://ems-backend-iota.vercel.app/api/exam-session",
+        "https://ems-backend-hazel.vercel.app/api/exam-session",
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -97,7 +97,7 @@ const AdminReportCard = () => {
   const fetchSemestersByClass = async (classId) => {
     try {
       const res = await axios.get(
-        `https://ems-backend-iota.vercel.app/api/semester/class/${classId}`,
+        `https://ems-backend-hazel.vercel.app/api/semester/class/${classId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -113,7 +113,7 @@ const AdminReportCard = () => {
     setError("");
     try {
       const res = await axios.get(
-        `https://ems-backend-iota.vercel.app/api/report-card/class-summary/${semesterId}`,
+        `https://ems-backend-hazel.vercel.app/api/report-card/class-summary/${semesterId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -141,7 +141,7 @@ const AdminReportCard = () => {
 
     try {
       const res = await axios.put(
-        `https://ems-backend-iota.vercel.app/api/report-card/publish/${selectedSemester}`,
+        `https://ems-backend-hazel.vercel.app/api/report-card/publish/${selectedSemester}`,
         { isPublished: nextState },
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
@@ -177,7 +177,7 @@ const AdminReportCard = () => {
     setModalLoading(true);
     try {
       const res = await axios.get(
-        `https://ems-backend-iota.vercel.app/api/report-card/student/${student.studentId}/semester/${selectedSemester}`,
+        `https://ems-backend-hazel.vercel.app/api/report-card/student/${student.studentId}/semester/${selectedSemester}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },

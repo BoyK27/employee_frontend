@@ -35,7 +35,7 @@ const StudentReportCard = () => {
   const fetchAvailableSemesters = async () => {
     try {
       const res = await axios.get(
-        `https://ems-backend-iota.vercel.app/api/semester/student/${user?._id || user?.id}`,
+        `https://ems-backend-hazel.vercel.app/api/semester/student/${user?._id || user?.id}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
@@ -60,7 +60,7 @@ const StudentReportCard = () => {
     try {
       const studentId = user?._id || user?.id;
       const res = await axios.get(
-        `https://ems-backend-iota.vercel.app/api/report-card/student/${studentId}/semester/${semesterId}`,
+        `https://ems-backend-hazel.vercel.app/api/report-card/student/${studentId}/semester/${semesterId}`,
         {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         },
