@@ -16,12 +16,16 @@ import DepartmentList from "./components/departments/DepartmentList";
 import AddDepartment from "./components/departments/AddDepartment";
 import EditDepartment from "./components/departments/EditDepartment";
 
-// Academic & Examination Components (NEW)
+// Academic & Examination Components
 import Classes from "./components/admin/Classes";
 import Subjects from "./components/admin/Subjects";
 import ExamSessions from "./components/admin/ExamSessions";
 import MarksEntry from "./components/employee/MarksEntry";
 import MarksView from "./components/student/MarksView";
+
+// Report Card Components (NEW)
+import AdminReportCard from "./pages/AdminReportCard";
+import StudentReportCard from "./pages/StudentReportCard";
 
 // Employee Components
 import EmployeeList from "./components/employee/List";
@@ -86,10 +90,11 @@ function App() {
           <Route path="add-department" element={<AddDepartment />} />
           <Route path="department/:id" element={<EditDepartment />} />
 
-          {/* Academic Management (NEW) */}
+          {/* Academic Management */}
           <Route path="classes" element={<Classes />} />
           <Route path="subjects" element={<Subjects />} />
           <Route path="exam-sessions" element={<ExamSessions />} />
+          <Route path="report-cards" element={<AdminReportCard />} />
 
           {/* Employee Management */}
           <Route path="employees" element={<EmployeeList />} />
@@ -143,7 +148,7 @@ function App() {
         >
           <Route path="profile/:id" element={<ViewEmployee />} />
 
-          {/* Marks Entry Spreadsheet (NEW) */}
+          {/* Marks Entry Spreadsheet */}
           <Route path="marks-entry" element={<MarksEntry />} />
 
           <Route path="leaves/:id" element={<LeaveList />} />
@@ -165,9 +170,10 @@ function App() {
         >
           <Route path="profile/:id" element={<ViewStudent />} />
 
-          {/* Grades & Report Card (NEW) */}
+          {/* Grades & Formal Report Card */}
           <Route path="results" element={<MarksView />} />
           <Route path="results/:id" element={<MarksView />} />
+          <Route path="report-card" element={<StudentReportCard />} />
           <Route path="leaves/:id" element={<StudentLeaveList />} />
           <Route path="add-leave" element={<AddStudentLeave />} />
           <Route path="attendance/:id" element={<ViewStudentAttendance />} />

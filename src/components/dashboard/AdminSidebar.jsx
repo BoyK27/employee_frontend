@@ -14,6 +14,7 @@ import {
   FaBook,
   FaBookmark,
   FaCalendarCheck,
+  FaPoll, // 🚀 Icon for Report Cards management
 } from "react-icons/fa";
 import { AiOutlineFileText } from "react-icons/ai";
 
@@ -115,6 +116,18 @@ const AdminSidebar = ({ isOpen, toggleSidebar }) => {
           >
             <FaCalendarCheck />
             <span>Exam Sessions</span>
+          </NavLink>
+
+          {/* 🚀 NEW: Semester Report Cards Management */}
+          <NavLink
+            to="/admin-dashboard/report-cards"
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500 " : "hover:bg-gray-700 "} flex items-center space-x-4 py-2.5 px-4 rounded`
+            }
+            onClick={closeMobileSidebar}
+          >
+            <FaPoll />
+            <span>Report Cards</span>
           </NavLink>
 
           {/* --- EMPLOYEE SECTION --- */}

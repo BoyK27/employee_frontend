@@ -9,6 +9,7 @@ import {
   FaCalendarCheck,
   FaPlaneDeparture,
   FaCogs,
+  FaPoll, // 🚀 Icon for Report Cards
 } from "react-icons/fa";
 import { useAuth } from "../../context/authContext";
 
@@ -58,35 +59,7 @@ const StudentSidebar = ({ isOpen, toggleSidebar }) => {
             <span>My Profile</span>
           </NavLink>
 
-          {/* Commented Out: My Courses */}
-          {/* 
-          <NavLink
-            to={`/student-dashboard/courses/${user?._id}`}
-            className={({ isActive }) =>
-              `${isActive ? "bg-teal-500" : "hover:bg-gray-700"} flex items-center space-x-4 py-2.5 px-4 rounded transition-colors`
-            }
-            onClick={handleNavClick}
-          >
-            <FaBook className="text-lg" />
-            <span>My Courses</span>
-          </NavLink> 
-          */}
-
-          {/* Commented Out: Timetable */}
-          {/* 
-          <NavLink
-            to={`/student-dashboard/timetable/${user?._id}`}
-            className={({ isActive }) =>
-              `${isActive ? "bg-teal-500" : "hover:bg-gray-700"} flex items-center space-x-4 py-2.5 px-4 rounded transition-colors`
-            }
-            onClick={handleNavClick}
-          >
-            <FaClock className="text-lg" />
-            <span>Timetable</span>
-          </NavLink> 
-          */}
-
-          {/* Active: Grades & Results */}
+          {/* Grades & Results (Per Session) */}
           <NavLink
             to={`/student-dashboard/results/${user?._id}`}
             className={({ isActive }) =>
@@ -96,6 +69,18 @@ const StudentSidebar = ({ isOpen, toggleSidebar }) => {
           >
             <FaFileAlt className="text-lg" />
             <span>Grades & Results</span>
+          </NavLink>
+
+          {/* 🚀 NEW: Compiled Semester Report Cards */}
+          <NavLink
+            to={`/student-dashboard/report-cards/${user?._id}`}
+            className={({ isActive }) =>
+              `${isActive ? "bg-teal-500" : "hover:bg-gray-700"} flex items-center space-x-4 py-2.5 px-4 rounded transition-colors`
+            }
+            onClick={handleNavClick}
+          >
+            <FaPoll className="text-lg" />
+            <span>Report Cards</span>
           </NavLink>
 
           {/* Leave Request */}
