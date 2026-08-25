@@ -23,7 +23,7 @@ import ExamSessions from "./components/admin/ExamSessions";
 import MarksEntry from "./components/employee/MarksEntry";
 import MarksView from "./components/student/MarksView";
 
-// Report Card Components (NEW)
+// Report Card Components
 import AdminReportCard from "./pages/AdminReportCard";
 import StudentReportCard from "./pages/StudentReportCard";
 
@@ -173,7 +173,14 @@ function App() {
           {/* Grades & Formal Report Card */}
           <Route path="results" element={<MarksView />} />
           <Route path="results/:id" element={<MarksView />} />
+
+          {/* Matches /student-dashboard/report-cards/:studentId from StudentSidebar */}
+          <Route
+            path="report-cards/:studentId"
+            element={<StudentReportCard />}
+          />
           <Route path="report-card" element={<StudentReportCard />} />
+
           <Route path="leaves/:id" element={<StudentLeaveList />} />
           <Route path="add-leave" element={<AddStudentLeave />} />
           <Route path="attendance/:id" element={<ViewStudentAttendance />} />

@@ -1,61 +1,75 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 import {
-  FaPrint,
+  FaGraduationCap,
   FaTrophy,
-  FaExclamationTriangle,
-  FaBookOpen,
+  FaBook,
+  FaLock,
+  FaCalendarAlt,
+  FaPrint,
 } from "react-icons/fa";
 
 const API_BASE_URL = "https://ems-backend-hazel.vercel.app/api";
 
 const StudentReportCard = () => {
+  const { studentId } = useParams();
+
   const [semesters, setSemesters] = useState([]);
   const [selectedSemesterId, setSelectedSemesterId] = useState("");
   const [reportCard, setReportCard] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Get current student user details from Auth Context / Local Storage
-  const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
-  // Safely extract studentId across user payload schema variants
-  const studentId =
-    currentUser?.studentId?._id ||
-    currentUser?.studentId ||
-    currentUser?._id ||
-    currentUser?.id;
-
+  // Load available semesters on mount
   useEffect(() => {
     fetchSemesters();
   }, []);
 
+  // Automatically fetch report card when selected semester changes
+  useEffect(() => {
+    if (selectedSemesterId && studentId) {
+      fetchStudentReportCard(selectedSemesterId);
+    } else {
+      setReportCard(null);
+    }
+  }, [selectedSemesterId, studentId]);
+
   const fetchSemesters = async () => {
     try {
       const token = localStorage.getItem("token");
+      if (!token) return;
+
       const res = await axios.get(`${API_BASE_URL}/semester`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (res.data.success) {
-        setSemesters(res.data.semesters || res.data.data || []);
+        const list = res.data.semesters || res.data.data || [];
+        setSemesters(list);
+        if (list.length > 0) {
+          // Default to the first available semester
+          setSelectedSemesterId(list[0]._id);
+        }
       }
     } catch (err) {
-      setError("Failed to fetch academic semesters.");
+      setError("Failed to load academic semesters.");
     }
   };
 
-  useEffect(() => {
-    if (selectedSemesterId && studentId) {
-      fetchReportCard(selectedSemesterId);
-    }
-  }, [selectedSemesterId]);
-
-  const fetchReportCard = async (semesterId) => {
+  const fetchStudentReportCard = async (semesterId) => {
     setLoading(true);
     setError("");
     setReportCard(null);
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Authentication missing. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
       const res = await axios.get(
         `${API_BASE_URL}/report-card/student/${studentId}/semester/${semesterId}`,
         { headers: { Authorization: `Bearer ${token}` } },
@@ -65,10 +79,16 @@ const StudentReportCard = () => {
         setReportCard(res.data.reportCard);
       }
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-          "Semester report card is currently unavailable or not published.",
-      );
+      if (err.response?.status === 403) {
+        setError(
+          err.response?.data?.error ||
+            "Report cards for this semester have not been published by administration yet.",
+        );
+      } else if (err.response?.status === 404) {
+        setError("No report card data found for this semester.");
+      } else {
+        setError("Failed to retrieve report card information.");
+      }
     } finally {
       setLoading(false);
     }
@@ -79,23 +99,25 @@ const StudentReportCard = () => {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      {/* Header Controls (Hidden during print) */}
-      <div className="bg-white p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
+      {/* Header & Controls */}
+      <div className="bg-white p-6 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
-            My Academic Report Card
+          <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <FaGraduationCap className="text-teal-600" /> My Academic Report
+            Cards
           </h1>
           <p className="text-gray-500 text-sm">
-            Select a semester to review published results.
+            View compiled grades, subject breakdowns, and semester ranks.
           </p>
         </div>
 
-        <div className="flex items-center gap-4 w-full sm:w-auto">
+        {/* Semester Dropdown & Print Button */}
+        <div className="flex items-center gap-3 w-full sm:w-auto">
           <select
             value={selectedSemesterId}
             onChange={(e) => setSelectedSemesterId(e.target.value)}
-            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 outline-none w-full sm:w-64"
+            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 outline-none w-full sm:w-56 text-sm"
           >
             <option value="">-- Select Semester --</option>
             {semesters.map((s) => (
@@ -108,7 +130,7 @@ const StudentReportCard = () => {
           {reportCard && (
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-md font-semibold flex items-center gap-2 transition"
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-900 text-white rounded-md text-sm font-medium flex items-center gap-2 transition"
             >
               <FaPrint /> Print
             </button>
@@ -116,126 +138,116 @@ const StudentReportCard = () => {
         </div>
       </div>
 
-      {/* Error / Unpublished State */}
+      {/* Notifications */}
       {error && (
-        <div className="bg-amber-50 border-l-4 border-amber-500 p-6 rounded-r-lg shadow-sm flex items-start gap-3">
-          <FaExclamationTriangle className="text-amber-600 text-xl mt-0.5 flex-shrink-0" />
-          <div>
-            <h3 className="font-bold text-amber-800">Notice</h3>
-            <p className="text-amber-700 text-sm mt-1">{error}</p>
-          </div>
+        <div className="p-4 bg-amber-50 text-amber-800 border border-amber-200 rounded-md flex items-center gap-3 text-sm">
+          <FaLock className="text-amber-600 text-lg flex-shrink-0" />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Report Card Document View */}
+      {/* Main Content Area */}
       {loading ? (
-        <div className="text-center py-16 bg-white rounded-lg shadow-md text-gray-500">
-          Compiling your official semester report card...
+        <div className="text-center py-16 bg-white rounded-lg shadow-md text-gray-500 text-sm">
+          Loading report card details...
         </div>
       ) : reportCard ? (
-        <div className="bg-white p-8 rounded-lg shadow-lg space-y-6 border border-gray-100 print:shadow-none print:p-0 print:border-none">
-          {/* Printable Header */}
-          <div className="border-b-2 border-teal-600 pb-4 flex justify-between items-end">
-            <div>
-              <h2 className="text-2xl font-black text-gray-800 uppercase tracking-wide">
-                Official Report Card
-              </h2>
-              <p className="text-teal-700 font-semibold">
-                {reportCard.semesterName}
-              </p>
+        <div className="space-y-6">
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Student Info */}
+            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-teal-500">
+              <span className="text-xs text-gray-500 uppercase font-semibold">
+                Student Name
+              </span>
+              <h3 className="text-lg font-bold text-gray-800 mt-1">
+                {reportCard.name}
+              </h3>
               <p className="text-xs text-gray-500">
-                Academic Year: {reportCard.academicYear}
+                Reg No: {reportCard.registrationNumber || "N/A"}
               </p>
             </div>
-            <div className="text-right">
-              <span className="text-xs uppercase text-gray-400 block font-bold">
-                Class Rank
-              </span>
-              <span className="text-2xl font-black text-teal-700 flex items-center justify-end gap-1">
-                <FaTrophy className="text-yellow-500 text-lg" />{" "}
-                {reportCard.positionRatio}
-              </span>
-            </div>
-          </div>
 
-          {/* Student Profile Overview */}
-          <div className="bg-gray-50 p-4 rounded-md grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div>
-              <span className="text-gray-500 text-xs block">Student Name</span>
-              <span className="font-bold text-gray-800">{reportCard.name}</span>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs block">
-                Registration No.
-              </span>
-              <span className="font-bold text-gray-800">
-                {reportCard.registrationNumber || "N/A"}
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs block">
-                Overall Average
-              </span>
-              <span className="font-bold text-teal-700">
-                {reportCard.overallAverage} / 20
-              </span>
-            </div>
-            <div>
-              <span className="text-gray-500 text-xs block">Final Grade</span>
-              <span className="font-bold text-blue-700">
+            {/* Overall Average */}
+            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-blue-500 flex justify-between items-center">
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-semibold">
+                  Semester Average
+                </span>
+                <h3 className="text-2xl font-bold text-teal-700 mt-1">
+                  {reportCard.overallAverage} / 20
+                </h3>
+              </div>
+              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded font-bold text-lg">
                 {reportCard.overallGrade}
               </span>
             </div>
+
+            {/* Class Rank */}
+            <div className="bg-white p-5 rounded-lg shadow-md border-l-4 border-yellow-500 flex justify-between items-center">
+              <div>
+                <span className="text-xs text-gray-500 uppercase font-semibold">
+                  Class Position
+                </span>
+                <h3 className="text-2xl font-bold text-gray-800 mt-1">
+                  {reportCard.positionRatio || `#${reportCard.rank}`}
+                </h3>
+              </div>
+              <FaTrophy className="text-yellow-500 text-3xl" />
+            </div>
           </div>
 
-          {/* Marks & Subjects Table */}
-          <div className="space-y-2">
-            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-md">
-              <FaBookOpen className="text-teal-600" /> Academic Performance
+          {/* Subject Breakdown Table */}
+          <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+            <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <FaBook className="text-teal-600" /> Subject Grades & Evaluation
               Breakdown
-            </h3>
+            </h2>
+
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse border border-gray-200 text-sm">
+              <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="bg-teal-700 text-white text-xs font-semibold uppercase">
-                    <th className="p-3 border">Subject</th>
-                    <th className="p-3 border text-center">Code</th>
-                    <th className="p-3 border">Session Breakdown</th>
-                    <th className="p-3 border text-center">
-                      Final Score (/20)
-                    </th>
-                    <th className="p-3 border text-center">Grade</th>
+                  <tr className="border-b bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
+                    <th className="p-3">Subject</th>
+                    <th className="p-3">Assessments</th>
+                    <th className="p-3 text-center">Final Score (/20)</th>
+                    <th className="p-3 text-center">Grade</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y text-xs">
-                  {reportCard.subjects.map((sub, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="p-3 border font-semibold text-gray-800">
+                <tbody className="divide-y text-sm">
+                  {reportCard.subjects?.map((sub, idx) => (
+                    <tr key={idx} className="hover:bg-gray-50 transition">
+                      <td className="p-3 font-semibold text-gray-800">
                         {sub.subjectName}
+                        <div className="text-xs text-gray-400 font-normal">
+                          {sub.subjectCode}
+                        </div>
                       </td>
-                      <td className="p-3 border text-center text-gray-500">
-                        {sub.subjectCode}
+                      <td className="p-3">
+                        <div className="space-y-1">
+                          {sub.sessionBreakdown?.map((sb, sIdx) => (
+                            <div
+                              key={sIdx}
+                              className="text-xs text-gray-600 flex gap-2"
+                            >
+                              <span className="font-medium">
+                                {sb.sessionName}:
+                              </span>
+                              <span>
+                                {sb.rawScore} / {sb.outOf} ({sb.normalizedScore}
+                                /20)
+                              </span>
+                            </div>
+                          ))}
+                        </div>
                       </td>
-                      <td className="p-3 border space-y-1">
-                        {sub.sessionBreakdown.map((sb, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="flex justify-between text-[11px] text-gray-600"
-                          >
-                            <span>
-                              {sb.sessionName} ({sb.weight}%):
-                            </span>
-                            <span className="font-mono">
-                              {sb.normalizedScore} / 20
-                            </span>
-                          </div>
-                        ))}
-                      </td>
-                      <td className="p-3 border text-center font-bold text-teal-700 text-sm">
+                      <td className="p-3 text-center font-bold text-teal-700 text-base">
                         {sub.finalSubjectMark}
                       </td>
-                      <td className="p-3 border text-center font-bold text-blue-800 text-sm">
-                        {sub.grade}
+                      <td className="p-3 text-center">
+                        <span className="px-2.5 py-1 rounded text-xs font-semibold bg-teal-100 text-teal-800">
+                          {sub.grade}
+                        </span>
                       </td>
                     </tr>
                   ))}
@@ -243,26 +255,10 @@ const StudentReportCard = () => {
               </table>
             </div>
           </div>
-
-          {/* Footer Sign-off */}
-          <div className="pt-8 grid grid-cols-2 gap-8 text-center text-xs text-gray-500 border-t">
-            <div>
-              <p className="font-semibold text-gray-700">
-                Class Delegate / Coordinator
-              </p>
-              <div className="mt-8 border-b border-gray-300 w-3/4 mx-auto"></div>
-            </div>
-            <div>
-              <p className="font-semibold text-gray-700">
-                Head of Department / Administration
-              </p>
-              <div className="mt-8 border-b border-gray-300 w-3/4 mx-auto"></div>
-            </div>
-          </div>
         </div>
       ) : !selectedSemesterId ? (
         <div className="text-center py-16 bg-white rounded-lg shadow-md text-gray-500">
-          Please select a semester from the dropdown to view your report card.
+          Please select a semester to view your report card.
         </div>
       ) : null}
     </div>
