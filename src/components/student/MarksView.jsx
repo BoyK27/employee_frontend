@@ -58,6 +58,7 @@ const MarksView = () => {
   }, []);
 
   // 2. Fetch Sessions dynamically when selectedSemester changes
+  // 2. Fetch Sessions dynamically when selectedSemester changes
   useEffect(() => {
     const fetchSessions = async () => {
       try {
