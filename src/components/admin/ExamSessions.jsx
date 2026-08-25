@@ -1,14 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import {
-  Calendar,
-  Plus,
-  Trash2,
-  Eye,
-  EyeOff,
-  BookOpen,
-  Layers,
-} from "lucide-react";
+import { Calendar, Plus, Trash2, Eye, EyeOff, Layers } from "lucide-react";
+
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "https://ems-backend-hazel.vercel.app";
 
 const ExamSessions = () => {
   const [activeTab, setActiveTab] = useState("sessions"); // "sessions" | "semesters"
@@ -19,6 +14,8 @@ const ExamSessions = () => {
   // Session Form State
   const [sessionName, setSessionName] = useState("");
   const [isPublished, setIsPublished] = useState(false);
+  const [selectedClassForSession, setSelectedClassForSession] = useState("");
+  const [semestersForSession, setSemestersForSession] = useState([]);
   const [selectedSemesterForSession, setSelectedSemesterForSession] =
     useState("");
 
@@ -37,18 +34,32 @@ const ExamSessions = () => {
     fetchClasses();
   }, []);
 
+  // Fetch semesters when Class selection changes in Tab 2 (Manage Semesters)
   useEffect(() => {
     if (selectedClass) {
-      fetchSemestersByClass(selectedClass);
+      fetchSemestersByClass(selectedClass).then((data) => setSemesters(data));
+    } else {
+      setSemesters([]);
     }
   }, [selectedClass]);
 
+  // Fetch semesters when Class selection changes in Tab 1 (Create Exam Session)
+  useEffect(() => {
+    setSelectedSemesterForSession("");
+    if (selectedClassForSession) {
+      fetchSemestersByClass(selectedClassForSession).then((data) =>
+        setSemestersForSession(data),
+      );
+    } else {
+      setSemestersForSession([]);
+    }
+  }, [selectedClassForSession]);
+
   const fetchSessions = async () => {
     try {
-      const res = await axios.get(
-        "https://ems-backend-hazel.vercel.app/api/exam-session",
-        { headers },
-      );
+      const res = await axios.get(`${API_BASE_URL}/api/exam-session`, {
+        headers,
+      });
       if (res.data.success)
         setSessions(res.data.sessions || res.data.examSessions || []);
     } catch (err) {
@@ -58,10 +69,7 @@ const ExamSessions = () => {
 
   const fetchClasses = async () => {
     try {
-      const res = await axios.get(
-        "https://ems-backend-hazel.vercel.app/api/class",
-        { headers },
-      );
+      const res = await axios.get(`${API_BASE_URL}/api/class`, { headers });
       if (res.data.success) setClasses(res.data.classes || []);
     } catch (err) {
       console.error("Error fetching classes:", err);
@@ -71,34 +79,39 @@ const ExamSessions = () => {
   const fetchSemestersByClass = async (classId) => {
     try {
       const res = await axios.get(
-        `https://ems-backend-hazel.vercel.app/api/semester/class/${classId}`,
+        `${API_BASE_URL}/api/semester/class/${classId}`,
         { headers },
       );
-      if (res.data.success) setSemesters(res.data.semesters || []);
+      if (res.data.success) return res.data.semesters || [];
     } catch (err) {
       console.error("Error fetching semesters:", err);
     }
+    return [];
   };
 
-  // Submit Exam Session
+  // Submit Exam Session with mandatory semester link
   const handleSessionSubmit = async (e) => {
     e.preventDefault();
-    if (!sessionName.trim()) return;
+    if (!sessionName.trim() || !selectedSemesterForSession) {
+      alert("Please enter a session name and select a semester.");
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/exam-session/add",
+        `${API_BASE_URL}/api/exam-session/add`,
         {
           sessionName,
           isPublished,
-          semesterId: selectedSemesterForSession || null,
+          semesterId: selectedSemesterForSession,
         },
         { headers },
       );
       if (res.data.success) {
         setSessionName("");
         setIsPublished(false);
+        setSelectedClassForSession("");
         setSelectedSemesterForSession("");
         fetchSessions();
       }
@@ -117,7 +130,7 @@ const ExamSessions = () => {
     setLoading(true);
     try {
       const res = await axios.post(
-        "https://ems-backend-hazel.vercel.app/api/semester/add",
+        `${API_BASE_URL}/api/semester/add`,
         {
           name: semesterName,
           academicYear,
@@ -127,7 +140,7 @@ const ExamSessions = () => {
       );
       if (res.data.success) {
         setSemesterName("");
-        fetchSemestersByClass(selectedClass);
+        fetchSemestersByClass(selectedClass).then((data) => setSemesters(data));
       }
     } catch (err) {
       alert(err.response?.data?.error || "Error adding semester");
@@ -139,7 +152,7 @@ const ExamSessions = () => {
   const handleTogglePublish = async (id) => {
     try {
       const res = await axios.put(
-        `https://ems-backend-hazel.vercel.app/api/exam-session/publish/${id}`,
+        `${API_BASE_URL}/api/exam-session/publish/${id}`,
         {},
         { headers },
       );
@@ -155,10 +168,9 @@ const ExamSessions = () => {
     if (!window.confirm("Are you sure you want to delete this session?"))
       return;
     try {
-      await axios.delete(
-        `https://ems-backend-hazel.vercel.app/api/exam-session/${id}`,
-        { headers },
-      );
+      await axios.delete(`${API_BASE_URL}/api/exam-session/${id}`, {
+        headers,
+      });
       fetchSessions();
     } catch (err) {
       alert("Failed to delete exam session");
@@ -213,6 +225,50 @@ const ExamSessions = () => {
               <Plus className="text-teal-600" size={20} /> Add Exam Session
             </h2>
             <form onSubmit={handleSessionSubmit} className="space-y-4">
+              {/* Step 1: Pick Class */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
+                  Target Class
+                </label>
+                <select
+                  value={selectedClassForSession}
+                  onChange={(e) => setSelectedClassForSession(e.target.value)}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-sm bg-gray-50 outline-none"
+                  required
+                >
+                  <option value="">-- Choose Class --</option>
+                  {classes.map((c) => (
+                    <option key={c._id} value={c._id}>
+                      {c.className || c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 2: Pick Semester */}
+              <div>
+                <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
+                  Target Semester
+                </label>
+                <select
+                  value={selectedSemesterForSession}
+                  onChange={(e) =>
+                    setSelectedSemesterForSession(e.target.value)
+                  }
+                  disabled={!selectedClassForSession}
+                  className="w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 text-sm bg-gray-50 outline-none disabled:opacity-50"
+                  required
+                >
+                  <option value="">-- Choose Semester --</option>
+                  {semestersForSession.map((s) => (
+                    <option key={s._id} value={s._id}>
+                      {s.name} ({s.academicYear})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Step 3: Session Name */}
               <div>
                 <label className="block text-xs font-semibold text-gray-600 uppercase mb-1">
                   Session Title
@@ -268,6 +324,7 @@ const ExamSessions = () => {
                   <tr className="border-b border-gray-200 text-gray-500 text-sm uppercase bg-gray-50">
                     <th className="p-3">#</th>
                     <th className="p-3">Session Name</th>
+                    <th className="p-3">Linked Semester</th>
                     <th className="p-3 text-center">Result Status</th>
                     <th className="p-3 text-center">Actions</th>
                   </tr>
@@ -284,6 +341,17 @@ const ExamSessions = () => {
                         </td>
                         <td className="p-3 font-semibold text-gray-800">
                           {sess.sessionName}
+                        </td>
+                        <td className="p-3 text-sm text-gray-600">
+                          {sess.semesterId?.name ? (
+                            <span className="bg-teal-50 text-teal-700 font-semibold px-2.5 py-1 rounded-md border border-teal-100">
+                              {sess.semesterId.name}
+                            </span>
+                          ) : (
+                            <span className="text-amber-500 italic">
+                              Unassigned
+                            </span>
+                          )}
                         </td>
                         <td className="p-3 text-center">
                           <button
@@ -318,7 +386,7 @@ const ExamSessions = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="4" className="text-center p-6 text-gray-500">
+                      <td colSpan="5" className="text-center p-6 text-gray-500">
                         No exam sessions configured yet.
                       </td>
                     </tr>
@@ -353,7 +421,7 @@ const ExamSessions = () => {
                   <option value="">-- Choose Class --</option>
                   {classes.map((c) => (
                     <option key={c._id} value={c._id}>
-                      {c.className}
+                      {c.className || c.name}
                     </option>
                   ))}
                 </select>

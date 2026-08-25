@@ -55,6 +55,7 @@ const MarksEntry = () => {
     setSelectedSemester("");
     setSelectedSession("");
     setSelectedSubject("");
+    setSessions([]);
     setStudents([]);
     setMarksMap({});
 
@@ -91,6 +92,9 @@ const MarksEntry = () => {
   // 3. Fetch Exam Sessions when Semester changes
   useEffect(() => {
     setSelectedSession("");
+    setStudents([]);
+    setMarksMap({});
+
     if (selectedSemester) {
       axios
         .get(`${API_BASE_URL}/api/exam-session/semester/${selectedSemester}`, {
@@ -99,9 +103,10 @@ const MarksEntry = () => {
         .then((res) => {
           if (res.data.success) setSessions(res.data.sessions || []);
         })
-        .catch((err) =>
-          console.error("Error fetching semester sessions:", err),
-        );
+        .catch((err) => {
+          console.error("Error fetching semester sessions:", err);
+          setSessions([]);
+        });
     } else {
       setSessions([]);
     }
@@ -269,10 +274,16 @@ const MarksEntry = () => {
           <select
             value={selectedSession}
             onChange={(e) => setSelectedSession(e.target.value)}
-            disabled={!selectedSemester}
+            disabled={!selectedSemester || sessions.length === 0}
             className="w-full p-2.5 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-teal-500 outline-none disabled:opacity-50"
           >
-            <option value="">Select Session</option>
+            <option value="">
+              {!selectedSemester
+                ? "Select Semester First"
+                : sessions.length === 0
+                  ? "No Sessions Found"
+                  : "Select Session"}
+            </option>
             {sessions.map((se) => (
               <option key={se._id} value={se._id}>
                 {se.sessionName}
