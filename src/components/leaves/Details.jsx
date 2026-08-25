@@ -25,10 +25,15 @@ const Details = () => {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
 
-  // Helper for Authorization Headers
+  // Helper for Authorization & Anti-Cache Headers
   const getAuthHeaders = () => {
     const token = localStorage.getItem("token");
-    return { Authorization: `Bearer ${token}` };
+    return {
+      Authorization: `Bearer ${token}`,
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      Pragma: "no-cache",
+      Expires: "0",
+    };
   };
 
   // 1. Fetch Leave Details on Mount
