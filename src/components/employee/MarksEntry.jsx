@@ -13,12 +13,12 @@ const API_BASE_URL =
 
 const MarksEntry = () => {
   const [classes, setClasses] = useState([]);
-  const [semesters, setSemesters] = useState([]); // 👈 Semesters state
+  const [semesters, setSemesters] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [subjects, setSubjects] = useState([]);
 
   const [selectedClass, setSelectedClass] = useState("");
-  const [selectedSemester, setSelectedSemester] = useState(""); // 👈 Selected Semester
+  const [selectedSemester, setSelectedSemester] = useState("");
   const [selectedSession, setSelectedSession] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [outOf, setOutOf] = useState(20);
@@ -37,7 +37,6 @@ const MarksEntry = () => {
     const fetchInitialData = async () => {
       try {
         const [classRes, semRes] = await Promise.all([
-          // Adjust endpoint to fetch assigned classes for the logged-in teacher
           axios.get(`${API_BASE_URL}/api/class/assigned`, { headers }),
           axios.get(`${API_BASE_URL}/api/semester`, { headers }),
         ]);
@@ -56,8 +55,9 @@ const MarksEntry = () => {
     fetchInitialData();
   }, []);
 
-  // 2. Fetch Exam Sessions when Semester changes
+  // 2. Fetch Exam Sessions when Semester changes & reset session selection
   useEffect(() => {
+    setSelectedSession("");
     if (selectedSemester) {
       axios
         .get(`${API_BASE_URL}/api/exam-session/semester/${selectedSemester}`, {
@@ -74,8 +74,12 @@ const MarksEntry = () => {
     }
   }, [selectedSemester]);
 
-  // 3. Fetch Subjects when Class changes (Assigned to logged-in teacher)
+  // 3. Fetch Assigned Subjects when Class changes & reset subject selection
   useEffect(() => {
+    setSelectedSubject("");
+    setStudents([]);
+    setMarksMap({});
+
     if (selectedClass) {
       axios
         .get(`${API_BASE_URL}/api/subject/assigned/${selectedClass}`, {
@@ -169,7 +173,7 @@ const MarksEntry = () => {
       return {
         studentId: st._id,
         classId: selectedClass,
-        semesterId: selectedSemester, // 👈 Pass Semester ID
+        semesterId: selectedSemester,
         examSessionId: selectedSession,
         subjectId: selectedSubject,
         score: Math.min(parsedScore, Number(outOf)),
