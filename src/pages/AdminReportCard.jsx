@@ -7,6 +7,7 @@ import {
   FaTrophy,
   FaUserGraduate,
   FaFilter,
+  FaPrint,
 } from "react-icons/fa";
 
 const API_BASE_URL = "https://ems-backend-hazel.vercel.app/api";
@@ -27,7 +28,6 @@ const AdminReportCard = () => {
   const [successMsg, setSuccessMsg] = useState("");
   const [selectedStudentReport, setSelectedStudentReport] = useState(null);
 
-  // Fetch semesters and classes on initial load
   useEffect(() => {
     fetchSemesters();
     fetchClasses();
@@ -52,7 +52,6 @@ const AdminReportCard = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) return;
-      // Fetch available classes / departments from your backend
       const res = await axios.get(`${API_BASE_URL}/class`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -60,12 +59,10 @@ const AdminReportCard = () => {
         setClasses(res.data.classes || res.data.data || []);
       }
     } catch (err) {
-      // Fallback if dedicated class endpoint returns non-standard shape
       console.warn("Could not load classes list automatically:", err.message);
     }
   };
 
-  // Fetch class summary whenever selected semester or class changes
   useEffect(() => {
     if (selectedSemesterId) {
       fetchClassSummary(selectedSemesterId, selectedClassId);
@@ -87,7 +84,6 @@ const AdminReportCard = () => {
         return;
       }
 
-      // Pass optional classId as query param to backend endpoint
       const url = classId
         ? `${API_BASE_URL}/report-card/class-summary/${semesterId}?classId=${classId}`
         : `${API_BASE_URL}/report-card/class-summary/${semesterId}`;
@@ -100,7 +96,6 @@ const AdminReportCard = () => {
         const rawLeaderboard = res.data.leaderboard || [];
         setLeaderboard(rawLeaderboard);
 
-        // Client-side fallback filtering if backend returns unfiltered array
         if (classId) {
           const filtered = rawLeaderboard.filter(
             (st) =>
@@ -177,15 +172,28 @@ const AdminReportCard = () => {
     }
   };
 
+  const getSessionHeaders = () => {
+    if (!selectedStudentReport?.subjects) return [];
+    const headers = new Set();
+    selectedStudentReport.subjects.forEach((sub) => {
+      sub.sessionBreakdown?.forEach((sb) => {
+        headers.add(sb.sessionName);
+      });
+    });
+    return Array.from(headers);
+  };
+
+  const sessionHeaders = getSessionHeaders();
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header & Controls */}
-      <div className="bg-white p-6 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">
+          <h1 className="text-2xl font-bold text-slate-800">
             Class Report Card Management
           </h1>
-          <p className="text-gray-500 text-sm">
+          <p className="text-slate-500 text-sm">
             Review rankings, grade distribution, and publish results by class or
             semester.
           </p>
@@ -193,11 +201,10 @@ const AdminReportCard = () => {
 
         {/* Filter Toolbar */}
         <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
-          {/* Semester Selector */}
           <select
             value={selectedSemesterId}
             onChange={(e) => setSelectedSemesterId(e.target.value)}
-            className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 outline-none w-full md:w-52 text-sm"
+            className="p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 outline-none w-full md:w-52 text-sm"
           >
             <option value="">-- Select Semester --</option>
             {semesters.map((s) => (
@@ -207,14 +214,13 @@ const AdminReportCard = () => {
             ))}
           </select>
 
-          {/* Class Filter Dropdown */}
           <div className="flex items-center gap-1 w-full md:w-48">
-            <FaFilter className="text-gray-400 text-xs hidden sm:block" />
+            <FaFilter className="text-slate-400 text-xs hidden sm:block" />
             <select
               value={selectedClassId}
               onChange={(e) => setSelectedClassId(e.target.value)}
               disabled={!selectedSemesterId}
-              className="p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-teal-500 outline-none w-full text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+              className="p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 outline-none w-full text-sm disabled:bg-slate-100 disabled:cursor-not-allowed"
             >
               <option value="">-- All Classes --</option>
               {classes.map((c) => (
@@ -225,15 +231,14 @@ const AdminReportCard = () => {
             </select>
           </div>
 
-          {/* Publish / Unpublish Toggle */}
           {currentSemester && (
             <button
               onClick={handleTogglePublish}
               disabled={publishing}
-              className={`px-4 py-2 rounded-md font-semibold text-white text-sm flex items-center gap-2 transition ${
+              className={`px-4 py-2 rounded-lg font-semibold text-white text-sm flex items-center gap-2 transition ${
                 currentSemester.isReportCardPublished
                   ? "bg-amber-600 hover:bg-amber-700"
-                  : "bg-teal-600 hover:bg-teal-700"
+                  : "bg-slate-700 hover:bg-slate-800"
               } disabled:opacity-50`}
             >
               {currentSemester.isReportCardPublished ? (
@@ -253,12 +258,12 @@ const AdminReportCard = () => {
 
       {/* Notifications */}
       {error && (
-        <div className="p-4 bg-red-100 text-red-700 rounded-md border border-red-200 font-medium text-sm">
+        <div className="p-4 bg-red-100 text-red-700 rounded-lg border border-red-200 font-medium text-sm">
           {error}
         </div>
       )}
       {successMsg && (
-        <div className="p-4 bg-green-100 text-green-700 rounded-md border border-green-200 font-medium text-sm">
+        <div className="p-4 bg-green-100 text-green-700 rounded-lg border border-green-200 font-medium text-sm">
           {successMsg}
         </div>
       )}
@@ -266,9 +271,9 @@ const AdminReportCard = () => {
       {/* Status Banner */}
       {currentSemester && (
         <div
-          className={`p-4 rounded-md flex justify-between items-center text-sm ${
+          className={`p-4 rounded-lg flex justify-between items-center text-sm ${
             currentSemester.isReportCardPublished
-              ? "bg-green-50 text-green-800 border border-green-200"
+              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
               : "bg-amber-50 text-amber-800 border border-amber-200"
           }`}
         >
@@ -279,7 +284,7 @@ const AdminReportCard = () => {
               : "Draft (Hidden from Students)"}
           </span>
           {currentSemester.publishedAt && (
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-slate-500">
               Published on:{" "}
               {new Date(currentSemester.publishedAt).toLocaleDateString()}
             </span>
@@ -287,21 +292,20 @@ const AdminReportCard = () => {
         </div>
       )}
 
-      {/* Main Content */}
+      {/* Main Content Area */}
       {loading ? (
-        <div className="text-center py-12 text-gray-500 text-sm">
+        <div className="text-center py-12 text-slate-500 text-sm">
           Compiling class performance and rankings...
         </div>
       ) : filteredLeaderboard.length > 0 ? (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Class Leaderboard */}
-          <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6 space-y-4">
+          <div className="lg:col-span-5 bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-4">
             <div className="flex justify-between items-center">
-              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
-                <FaTrophy className="text-yellow-500" /> Class Leaderboard &
-                Rankings
+              <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                <FaTrophy className="text-yellow-500" /> Leaderboard
               </h2>
-              <span className="text-xs font-semibold bg-gray-100 text-gray-600 px-2.5 py-1 rounded-full">
+              <span className="text-xs font-semibold bg-slate-100 text-slate-600 px-2.5 py-1 rounded-full">
                 {filteredLeaderboard.length} Students
               </span>
             </div>
@@ -309,54 +313,53 @@ const AdminReportCard = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b bg-gray-50 text-xs font-semibold text-gray-600 uppercase">
-                    <th className="p-3">Rank</th>
-                    <th className="p-3">Student Name</th>
-                    <th className="p-3">Reg No.</th>
-                    <th className="p-3 text-center">Average (/20)</th>
-                    <th className="p-3 text-center">Grade</th>
-                    <th className="p-3 text-center">Action</th>
+                  <tr className="border-b bg-slate-50 text-xs font-semibold text-slate-600 uppercase">
+                    <th className="p-2.5">Rank</th>
+                    <th className="p-2.5">Student</th>
+                    <th className="p-2.5 text-center">Avg</th>
+                    <th className="p-2.5 text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y text-sm">
                   {filteredLeaderboard.map((st, idx) => (
                     <tr
                       key={st.studentId || idx}
-                      className="hover:bg-gray-50 transition"
+                      className={`hover:bg-slate-50 transition ${
+                        selectedStudentReport?.studentId === st.studentId
+                          ? "bg-slate-100/70"
+                          : ""
+                      }`}
                     >
-                      <td className="p-3 font-semibold">
+                      <td className="p-2.5 font-semibold">
                         <span
-                          className={`inline-block px-2 py-1 rounded-full text-xs text-center min-w-[30px] ${
+                          className={`inline-block px-2 py-0.5 rounded-full text-xs text-center min-w-[28px] ${
                             st.rank === 1 || idx === 0
                               ? "bg-yellow-100 text-yellow-800 font-bold"
                               : st.rank === 2 || idx === 1
-                                ? "bg-gray-200 text-gray-800 font-bold"
+                                ? "bg-slate-200 text-slate-800 font-bold"
                                 : st.rank === 3 || idx === 2
                                   ? "bg-amber-100 text-amber-900 font-bold"
-                                  : "bg-gray-100 text-gray-600"
+                                  : "bg-slate-100 text-slate-600"
                           }`}
                         >
                           #{st.rank || idx + 1}
                         </span>
                       </td>
-                      <td className="p-3 font-medium text-gray-800">
-                        {st.name}
+                      <td className="p-2.5">
+                        <div className="font-semibold text-slate-800 text-xs">
+                          {st.name}
+                        </div>
+                        <div className="text-[10px] text-slate-400">
+                          {st.registrationNumber || "N/A"}
+                        </div>
                       </td>
-                      <td className="p-3 text-gray-500">
-                        {st.registrationNumber || "N/A"}
-                      </td>
-                      <td className="p-3 text-center font-bold text-teal-700">
+                      <td className="p-2.5 text-center font-bold text-teal-800 text-xs">
                         {st.overallAverage}
                       </td>
-                      <td className="p-3 text-center">
-                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800">
-                          {st.overallGrade}
-                        </span>
-                      </td>
-                      <td className="p-3 text-center">
+                      <td className="p-2.5 text-center">
                         <button
                           onClick={() => setSelectedStudentReport(st)}
-                          className="px-3 py-1 bg-gray-100 hover:bg-teal-50 text-teal-700 rounded text-xs flex items-center gap-1 mx-auto font-medium transition"
+                          className="px-2.5 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs flex items-center gap-1 mx-auto font-medium transition"
                         >
                           <FaEye /> View
                         </button>
@@ -368,82 +371,124 @@ const AdminReportCard = () => {
             </div>
           </div>
 
-          {/* Student Breakdown Panel */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          {/* Detailed Printable Formal Preview Panel */}
+          <div className="lg:col-span-7 bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             {selectedStudentReport ? (
               <div className="space-y-4">
-                <div className="border-b pb-3">
-                  <h3 className="text-lg font-bold text-gray-800">
-                    {selectedStudentReport.name}
-                  </h3>
-                  <p className="text-xs text-gray-500">
-                    Reg: {selectedStudentReport.registrationNumber || "N/A"}
-                  </p>
-                  <div className="mt-2 flex gap-4 text-sm">
-                    <span className="bg-teal-50 text-teal-800 px-2 py-1 rounded font-semibold">
-                      Rank:{" "}
-                      {selectedStudentReport.positionRatio ||
-                        `#${selectedStudentReport.rank}`}
-                    </span>
-                    <span className="bg-blue-50 text-blue-800 px-2 py-1 rounded font-semibold">
-                      Avg: {selectedStudentReport.overallAverage} / 20
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center border-b pb-3">
+                  <h3 className="font-bold text-slate-700">Official Preview</h3>
+                  <button
+                    onClick={() => window.print()}
+                    className="px-3 py-1 bg-slate-700 hover:bg-slate-800 text-white rounded text-xs font-semibold flex items-center gap-1"
+                  >
+                    <FaPrint /> Print Preview
+                  </button>
                 </div>
 
-                <h4 className="font-semibold text-gray-700 text-sm">
-                  Subject Breakdown
-                </h4>
-                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                  {selectedStudentReport.subjects?.map((sub, idx) => (
-                    <div
-                      key={idx}
-                      className="border p-3 rounded-md bg-gray-50 text-xs space-y-2"
-                    >
-                      <div className="flex justify-between font-bold text-gray-800">
-                        <span>
-                          {sub.subjectName} ({sub.subjectCode})
-                        </span>
-                        <span className="text-teal-700">
-                          {sub.finalSubjectMark} / 20 ({sub.grade})
-                        </span>
-                      </div>
-                      <div className="space-y-1">
-                        {sub.sessionBreakdown?.map((sb, sIdx) => (
-                          <div
-                            key={sIdx}
-                            className="flex justify-between text-gray-500 text-[11px]"
-                          >
-                            <span>
-                              {sb.sessionName} (Weight: {sb.weight}%)
-                            </span>
-                            <span>{sb.normalizedScore} / 20</span>
-                          </div>
-                        ))}
-                      </div>
+                {/* Styled Report Card Output */}
+                <div className="bg-white p-6 border border-slate-200 rounded-lg space-y-4 text-xs font-sans">
+                  {/* Top Header */}
+                  <div className="text-center border-b-2 border-slate-700 pb-2">
+                    <h2 className="text-xl font-black text-slate-700 uppercase tracking-widest">
+                      STUDENT REPORT CARD
+                    </h2>
+                  </div>
+
+                  {/* Info Header */}
+                  <div className="bg-[#E4ECEB] p-3 rounded border border-[#C5D9D7] grid grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="font-bold text-slate-700">NAME:</span>{" "}
+                      {selectedStudentReport.name}
                     </div>
-                  ))}
+                    <div>
+                      <span className="font-bold text-slate-700">REG NO:</span>{" "}
+                      {selectedStudentReport.registrationNumber || "N/A"}
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-700">RANK:</span>{" "}
+                      {selectedStudentReport.positionRatio ||
+                        `#${selectedStudentReport.rank}`}
+                    </div>
+                    <div>
+                      <span className="font-bold text-slate-700">AVERAGE:</span>{" "}
+                      {selectedStudentReport.overallAverage} / 20
+                    </div>
+                  </div>
+
+                  {/* Breakdown Table */}
+                  <table className="w-full text-left border-collapse text-[11px]">
+                    <thead>
+                      <tr className="uppercase font-bold">
+                        <th className="p-2 bg-[#5B6B8A] text-white">SUBJECT</th>
+                        {sessionHeaders.map((header, idx) => (
+                          <th
+                            key={idx}
+                            className={`p-2 text-center text-white ${
+                              idx % 2 === 0 ? "bg-[#7A839E]" : "bg-[#A1A8BD]"
+                            }`}
+                          >
+                            {header}
+                          </th>
+                        ))}
+                        <th className="p-2 bg-[#71AEA7] text-white text-center">
+                          FINAL SCORE
+                        </th>
+                        <th className="p-2 bg-[#5B6B8A] text-white text-center">
+                          GRADE
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {selectedStudentReport.subjects?.map((sub, idx) => (
+                        <tr key={idx}>
+                          <td className="p-2 font-semibold text-slate-800 uppercase border-b border-l border-slate-200">
+                            {sub.subjectName}
+                          </td>
+                          {sessionHeaders.map((headerName, hIdx) => {
+                            const sessionMatch = sub.sessionBreakdown?.find(
+                              (sb) => sb.sessionName === headerName,
+                            );
+                            return (
+                              <td
+                                key={hIdx}
+                                className="p-2 text-center border-b border-slate-200 bg-slate-50/50"
+                              >
+                                {sessionMatch
+                                  ? `${sessionMatch.normalizedScore}/20`
+                                  : "-"}
+                              </td>
+                            );
+                          })}
+                          <td className="p-2 text-center font-bold text-teal-800 border-b border-slate-200 bg-[#EBF5F4]">
+                            {sub.finalSubjectMark} / 20
+                          </td>
+                          <td className="p-2 text-center border-r border-b border-slate-200 font-bold">
+                            {sub.grade}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             ) : (
-              <div className="text-center py-16 text-gray-400 flex flex-col items-center gap-2">
-                <FaUserGraduate className="text-4xl text-gray-300" />
+              <div className="text-center py-24 text-slate-400 flex flex-col items-center gap-2">
+                <FaUserGraduate className="text-4xl text-slate-300" />
                 <p>
-                  Select a student from the leaderboard to view their full
-                  report card breakdown.
+                  Select a student from the leaderboard to view their official
+                  report card.
                 </p>
               </div>
             )}
           </div>
         </div>
       ) : selectedSemesterId ? (
-        <div className="text-center py-12 bg-white rounded-lg shadow-md text-gray-500">
-          No marks or report card entries found for the selected class/semester
-          filter.
+        <div className="text-center py-12 bg-white rounded-xl shadow-sm border text-slate-500">
+          No marks or report card entries found for the selected filter.
         </div>
       ) : (
-        <div className="text-center py-16 bg-white rounded-lg shadow-md text-gray-500">
-          Please select a semester above to load class report cards.
+        <div className="text-center py-16 bg-white rounded-xl shadow-sm border text-slate-500">
+          Please select a semester above to load report cards.
         </div>
       )}
     </div>
