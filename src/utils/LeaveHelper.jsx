@@ -1,178 +1,140 @@
 import React from "react";
-import DataTable from "react-data-table-component";
-import { columns, LeaveButtons } from "../../utils/LeaveHelper";
-import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
-const Table = () => {
-  const [leaves, setLeaves] = React.useState(null);
-  const [filteredLeaves, setFilteredLeaves] = React.useState(null);
+/* =========================================================
+   1. EMPLOYEE LEAVE HELPER
+   ========================================================= */
 
-  const fetchLeaves = async () => {
-    try {
-      const response = await axios.get(
-        "https://ems-backend-hazel.vercel.app/api/leave",
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        },
-      );
+export const columns = [
+  {
+    name: "S No",
+    selector: (row) => row.sno,
+    width: "70px",
+  },
+  {
+    name: "Emp ID",
+    selector: (row) => row.employeeId,
+    width: "120px",
+  },
+  {
+    name: "Name",
+    selector: (row) => row.name,
+    width: "140px",
+  },
+  {
+    name: "Leave Type",
+    selector: (row) => row.leaveType,
+    width: "140px",
+  },
+  {
+    name: "Department",
+    selector: (row) => row.department,
+    width: "140px",
+  },
+  {
+    name: "Days",
+    selector: (row) => row.days,
+    width: "80px",
+  },
+  {
+    name: "Status",
+    selector: (row) => row.status,
+    width: "120px",
+  },
+  {
+    name: "Action",
+    selector: (row) => row.action,
+    center: true,
+  },
+];
 
-      if (response.data.success) {
-        let sno = 1;
+export const LeaveButtons = ({ Id, _id }) => {
+  const navigate = useNavigate();
+  const leaveId = Id || _id;
 
-        const data = response.data.leaves.map((leave) => {
-          const startDate = new Date(leave.startDate);
-          const endDate = new Date(leave.endDate);
-          const timeDiff = endDate.getTime() - startDate.getTime();
-          const dayCount = Math.ceil(timeDiff / (1000 * 3600 * 24)) + 1;
-
-          // Safe Extraction for both Employee and Student references
-          const isStudent = Boolean(leave.studentId);
-          const profile = isStudent ? leave.studentId : leave.employeeId;
-
-          const identifier = isStudent
-            ? profile?.matricule || "N/A"
-            : profile?.employeeId || "N/A";
-
-          const name = profile?.userId?.name || "Unknown User";
-          const department =
-            profile?.department?.dep_name ||
-            profile?.classId?.className ||
-            "N/A";
-
-          return {
-            _id: leave._id,
-            sno: sno++,
-            employeeId: identifier,
-            name: name,
-            leaveType: leave.leaveType,
-            department: department,
-            days: dayCount,
-            status: leave.status,
-            action: <LeaveButtons Id={leave._id} />,
-          };
-        });
-
-        setLeaves(data);
-        setFilteredLeaves(data);
-      }
-    } catch (error) {
-      console.error("An error occurred:", error);
-      if (error.response && !error.response.data.success) {
-        alert(error.response.data.error);
-      } else {
-        alert("An unexpected error occurred.");
-      }
+  const handleView = () => {
+    if (!leaveId) {
+      console.error("LeaveButtons: Missing leave ID!");
+      return;
     }
-  };
-
-  React.useEffect(() => {
-    fetchLeaves();
-  }, []);
-
-  const filterByInput = (e) => {
-    const query = e.target.value.toLowerCase();
-    const data = leaves.filter(
-      (leave) =>
-        leave.employeeId.toLowerCase().includes(query) ||
-        leave.name.toLowerCase().includes(query),
-    );
-    setFilteredLeaves(data);
-  };
-
-  const filterByButton = (status) => {
-    const data = leaves.filter((leave) =>
-      leave.status.toLowerCase().includes(status.toLowerCase()),
-    );
-    setFilteredLeaves(data);
-  };
-
-  const getStatusStyle = (status) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-        return "bg-green-100 text-green-700 border-green-200";
-      case "rejected":
-        return "bg-red-100 text-red-700 border-red-200";
-      default:
-        return "bg-yellow-100 text-yellow-700 border-yellow-200";
-    }
-  };
-
-  const customStyles = {
-    headCells: {
-      style: {
-        backgroundColor: "#f3f4f6",
-        color: "#374151",
-        fontWeight: "bold",
-        fontSize: "14px",
-      },
-    },
+    navigate(`/admin-dashboard/leaves/${leaveId}`);
   };
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      {filteredLeaves ? (
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h3 className="text-2xl md:text-3xl font-extrabold text-gray-800 tracking-tight">
-              Manage Leaves
-            </h3>
-            <p className="text-gray-500 text-sm mt-1">
-              Review and process employee & student leave applications
-            </p>
-          </div>
-
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-8 space-y-4">
-            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-              <div className="relative w-full md:w-80">
-                <input
-                  type="text"
-                  placeholder="Search By ID or Name..."
-                  className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 outline-none transition-all"
-                  onChange={filterByInput}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2 justify-center">
-                {["Pending", "Approved", "Rejected"].map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => filterByButton(status)}
-                    className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-bold hover:border-teal-500 hover:text-teal-600 rounded-lg transition-all active:scale-95"
-                  >
-                    {status}
-                  </button>
-                ))}
-                <button
-                  onClick={() => setFilteredLeaves(leaves)}
-                  className="px-4 py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900 transition-all active:scale-95"
-                >
-                  All
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="hidden md:block bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-            <DataTable
-              columns={columns}
-              data={filteredLeaves}
-              pagination
-              customStyles={customStyles}
-              responsive
-              highlightOnHover
-            />
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-600"></div>
-          <p className="text-gray-500 font-medium">Loading leave data...</p>
-        </div>
-      )}
-    </div>
+    <button
+      onClick={handleView}
+      className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
+    >
+      View
+    </button>
   );
 };
 
-export default Table;
+/* =========================================================
+   2. STUDENT LEAVE HELPER
+   ========================================================= */
+
+export const studentColumns = [
+  {
+    name: "S No",
+    selector: (row) => row.sno,
+    width: "70px",
+  },
+  {
+    name: "Matricule",
+    selector: (row) => row.matricule,
+    width: "130px",
+  },
+  {
+    name: "Student Name",
+    selector: (row) => row.name,
+    width: "160px",
+  },
+  {
+    name: "Category",
+    selector: (row) => row.leaveType,
+    width: "140px",
+  },
+  {
+    name: "Department",
+    selector: (row) => row.department,
+    width: "150px",
+  },
+  {
+    name: "Days",
+    selector: (row) => row.days,
+    width: "80px",
+  },
+  {
+    name: "Status",
+    selector: (row) => row.status,
+    width: "120px",
+  },
+  {
+    name: "Action",
+    selector: (row) => row.action,
+    center: true,
+  },
+];
+
+export const StudentLeaveButtons = ({ Id, _id }) => {
+  const navigate = useNavigate();
+  const leaveId = Id || _id;
+
+  const handleView = () => {
+    if (!leaveId) {
+      console.error("StudentLeaveButtons: Missing leave ID!");
+      return;
+    }
+    navigate(`/admin-dashboard/student-leaves/${leaveId}`);
+  };
+
+  return (
+    <button
+      onClick={handleView}
+      className="px-4 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
+    >
+      View
+    </button>
+  );
+};
